@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { PublicRoute, ProtectedRoute, GlobalAuthListener, AdminLayout } from './components';
 import { NotFound, UnAuthorized } from './pages/error';
 import { Login } from './pages/auth';
+import { GenreManagement } from './pages/admin';
 
 function App() {
     return (
@@ -17,7 +18,7 @@ function App() {
             }}
             locale={viVN}
         >
-            <AppAntd>
+            <AppAntd message={{ maxCount: 3 }}>
                 <AuthProvider>
                     <Router>
                         <GlobalAuthListener />
@@ -36,7 +37,9 @@ function App() {
                                 path="/admin"
                                 element={<ProtectedRoute>{<AdminLayout />}</ProtectedRoute>}
                             >
+                                {/* Dashboard */}
                                 <Route index element={<NotFound />} />
+                                <Route path="genres" element={<GenreManagement />} />
                             </Route>
                             {/* Error pages */}
                             <Route path="/unauthorized" element={<UnAuthorized />} />

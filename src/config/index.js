@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { message } from 'antd';
 import { authAPI } from '../apis';
 import { v4 as uuidv4 } from 'uuid';
 import dayjs from 'dayjs';
@@ -155,12 +154,6 @@ if (!deviceId) {
 }
 
 /*  Start config for deviceId  */
-
-/*  Start config for message antd   */
-
-message.config({ maxCount: 3 }); // Limit only 3 messages are rendered
-
-/*   Start config for message antd   */
 
 /*   Start config for cho dayjs dayjs   */
 

@@ -17,8 +17,11 @@ const Login = () => {
         try {
             setLoading(true);
             const isAdmin = await login(values);
-            message.success('Đăng nhập thành công!');
-            navigate(isAdmin ? '/admin' : '/unauthorized');
+            if (isAdmin) {
+                message.success('Đăng nhập thành công!');
+                navigate('/admin');
+            }
+            navigate('/unauthorized');
         } catch (error) {
             console.log(error);
             message.error(error.response.data?.message || 'Đăng nhập thất bại!');

@@ -43,6 +43,12 @@ const AdminLayout = () => {
             label: 'Dashboard',
             onClick: () => navigate('/admin'),
         },
+        {
+            key: '/admin/genres',
+            icon: <AppstoreOutlined />,
+            label: 'Quản lý thể loại',
+            onClick: () => navigate('/admin/genres'),
+        },
     ];
 
     const handleLogout = () => {

@@ -78,9 +78,15 @@ const TheaterManagement = () => {
     };
 
     const handleEdit = (theater) => {
-        setEditingTheater(theater);
-        setOriginalTheaterData(theater);
-        form.setFieldsValue(theater);
+        const { coordinates, ...rest } = theater;
+        const normalizedData = {
+            ...rest,
+            longitude: coordinates?.coordinates?.[0],
+            latitude: coordinates?.coordinates?.[1],
+        };
+        setEditingTheater(normalizedData);
+        setOriginalTheaterData(normalizedData);
+        form.setFieldsValue(normalizedData);
         setIsModalVisible(true);
     };
 
@@ -120,12 +126,6 @@ const TheaterManagement = () => {
 
     const handleUpdateTheater = async (values) => {
         try {
-            // Check if data has changed
-            if (!hasFormChanged(originalTheaterData, values)) {
-                message.warning('Không có thay đổi nào để cập nhật!');
-                return;
-            }
-
             setLoading(true);
             await theaterAPI.updateTheater(editingTheater.id, values);
             message.success('Cập nhật rạp thành công');
@@ -138,13 +138,30 @@ const TheaterManagement = () => {
     };
 
     const handleModalOk = () => {
-        form.validateFields().then((values) => {
+        form.validateFields().then(async (values) => {
+            if (editingTheater && !hasFormChanged(originalTheaterData, values)) {
+                message.warning('Không có thay đổi nào để cập nhật!');
+                return;
+            }
+
+            const { latitude, longitude, ...rest } = values;
+            // Normolize data before creating
+            const payload = {
+                ...rest,
+                coordinates: {
+                    type: 'Point',
+                    coordinates: [
+                        longitude ? Number(longitude) : 0,
+                        latitude ? Number(latitude) : 0,
+                    ],
+                },
+            };
             if (editingTheater) {
                 // Update theater
-                handleUpdateTheater(values);
+                await handleUpdateTheater(payload);
             } else {
                 // Add a new theater
-                handleAddTheater(values);
+                await handleAddTheater(payload);
             }
             setIsModalVisible(false);
             form.resetFields();
@@ -291,6 +308,7 @@ const TheaterManagement = () => {
                 onCancel={() => setIsModalVisible(false)}
                 okText={editingTheater ? 'Cập nhật' : 'Thêm'}
                 cancelText="Hủy"
+                confirmLoading={isModalVisible && loading}
                 centered
                 width={600}
             >

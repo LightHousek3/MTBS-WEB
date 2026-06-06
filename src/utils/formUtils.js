@@ -9,9 +9,7 @@ export const hasFormChanged = (originalData, currentData, excludeFields = []) =>
     if (!originalData || !currentData) return true;
 
     // Lấy tất cả các keys từ currentData
-    const keys = Object.keys(currentData).filter(
-        key => !excludeFields.includes(key)
-    );
+    const keys = Object.keys(currentData).filter((key) => !excludeFields.includes(key));
 
     // So sánh từng field
     for (const key of keys) {
@@ -21,7 +19,7 @@ export const hasFormChanged = (originalData, currentData, excludeFields = []) =>
         // Xử lý các trường hợp đặc biệt
         if (originalValue === undefined && currentValue === undefined) continue;
         if (originalValue === null && currentValue === null) continue;
-        if (originalValue === "" && currentValue === "") continue;
+        if (originalValue === '' && currentValue === '') continue;
 
         // So sánh array
         if (Array.isArray(originalValue) && Array.isArray(currentValue)) {
@@ -29,8 +27,8 @@ export const hasFormChanged = (originalData, currentData, excludeFields = []) =>
 
             // So sánh array of objects (như genres)
             if (originalValue.length > 0 && typeof originalValue[0] === 'object') {
-                const originalIds = originalValue.map(item => item.id || item).sort();
-                const currentIds = currentValue.map(item => item.id || item).sort();
+                const originalIds = originalValue.map((item) => item.id || item).sort();
+                const currentIds = currentValue.map((item) => item.id || item).sort();
                 if (JSON.stringify(originalIds) !== JSON.stringify(currentIds)) return true;
             } else {
                 // So sánh array thông thường

@@ -6,7 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { PublicRoute, ProtectedRoute, GlobalAuthListener, AdminLayout } from './components';
 import { NotFound, UnAuthorized } from './pages/error';
 import { Login } from './pages/auth';
-import { GenreManagement } from './pages/admin';
+import { GenreManagement, TheaterManagement } from './pages/admin';
 
 function App() {
     return (
@@ -40,6 +40,7 @@ function App() {
                                 {/* Dashboard */}
                                 <Route index element={<NotFound />} />
                                 <Route path="genres" element={<GenreManagement />} />
+                                <Route path="theaters" element={<TheaterManagement />} />
                             </Route>
                             {/* Error pages */}
                             <Route path="/unauthorized" element={<UnAuthorized />} />

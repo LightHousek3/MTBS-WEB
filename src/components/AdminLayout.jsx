@@ -49,6 +49,12 @@ const AdminLayout = () => {
             label: 'Quản lý thể loại',
             onClick: () => navigate('/admin/genres'),
         },
+        {
+            key: '/admin/theaters',
+            icon: <ShopOutlined />,
+            label: 'Quản lý rạp',
+            onClick: () => navigate('/admin/theaters'),
+        },
     ];
 
     const handleLogout = () => {

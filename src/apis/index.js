@@ -15,4 +15,13 @@ const genreAPI = {
     deleteGenre: (id) => apiClient.delete(`/genres/${id}`),
 };
 
-export { authAPI, genreAPI };
+// Theater API
+const theaterAPI = {
+    getTheaters: (params) => apiClient.get(`/theaters`, { params }),
+    getTheaterById: (id) => apiClient.get(`/theaters/${id}`),
+    createTheater: (theater) => apiClient.post(`/theaters`, theater),
+    updateTheater: (id, theater) => apiClient.put(`/theaters/${id}`, theater),
+    deleteTheater: (id) => apiClient.delete(`/theaters/${id}`),
+};
+
+export { authAPI, genreAPI, theaterAPI };

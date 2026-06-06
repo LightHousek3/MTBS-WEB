@@ -30,6 +30,10 @@
         box-shadow: 0 4px 15px rgba(254, 105, 105, 0.4);
     }
 
+    .ant-btn.bg-primary {
+        background: linear-gradient(244.31deg, #fe6969 0%, #e30713 100%) !important;
+    }
+
     .ant-input-group-addon button {
         background: linear-gradient(244.31deg, #fe6969 0%, #e30713 100%) !important;
     }

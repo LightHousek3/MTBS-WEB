@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Table, Card, Button, Space, Input, Modal, Form, Typography, Popconfirm, App } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { genreAPI } from '../../apis';
-import { hasFormChanged } from '../../utils';
+import { formatDate, hasFormChanged } from '../../utils';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -14,14 +14,16 @@ const GenreManagement = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [editingGenre, setEditingGenre] = useState(null);
     const [originalGenreData, setOriginalGenreData] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     const { message } = App.useApp();
 
     const fetchGenres = async (page = 1, limit = 5, search = '') => {
         try {
+            setLoading(true);
             const params = { page, limit, search };
             const response = await genreAPI.getGenres(params);
-            console.log('response', response);
+
             const content = response.data.data || [];
             const total = response.data.meta.totalResults;
             setGenres(content);
@@ -29,6 +31,8 @@ const GenreManagement = () => {
         } catch (error) {
             message.error('Không thể tải danh sách thể loại!');
             console.log(error.response?.data?.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -57,12 +61,15 @@ const GenreManagement = () => {
 
     const handleDelete = async (id) => {
         try {
+            setLoading(true);
             await genreAPI.deleteGenre(id);
             message.success('Xóa thể loại thành công!');
-            fetchGenres(pagination.current, pagination.pageSize, searchKeyword);
+            fetchGenres(pagination?.current || 1, pagination?.pageSize || 5, searchKeyword);
         } catch (error) {
             message.error('Lỗi khi xóa thể loại!');
             console.log(error.response?.data?.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -79,9 +86,11 @@ const GenreManagement = () => {
                         message.warning('Không có thay đổi nào để cập nhật!');
                         return;
                     }
+                    setLoading(true);
                     await genreAPI.updateGenre(editingGenre.id, payload);
                     message.success('Cập nhật thể loại thành công!');
                 } else {
+                    setLoading(true);
                     await genreAPI.createGenre(payload);
                     message.success('Thêm thể loại mới thành công!');
                 }
@@ -91,6 +100,8 @@ const GenreManagement = () => {
                 fetchGenres(pagination?.current || 1, pagination?.pageSize || 5, searchKeyword);
             } catch (error) {
                 message.error(error.response?.data?.message);
+            } finally {
+                setLoading(false);
             }
         });
     };
@@ -101,6 +112,20 @@ const GenreManagement = () => {
             dataIndex: 'name',
             key: 'name',
             sorter: (a, b) => a.name.localeCompare(b.name),
+        },
+        {
+            title: 'Ngày tạo',
+            dataIndex: 'createdAt',
+            key: 'createdAt',
+            sorter: (a, b) => new Date(a) - new Date(b),
+            render: (createdAt) => <span>{formatDate(createdAt, 'HH:mm dd/MM/yyyy')}</span>,
+        },
+        {
+            title: 'Ngày chỉnh sửa',
+            dataIndex: 'updatedAt',
+            key: 'updatedAt',
+            sorter: (a, b) => new Date(a) - new Date(b),
+            render: (updatedAt) => <span>{formatDate(updatedAt, 'HH:mm dd/MM/yyyy')}</span>,
         },
         {
             title: 'Thao tác',
@@ -135,7 +160,7 @@ const GenreManagement = () => {
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={handleAdd}
-                    className="btn-primary"
+                    className="bg-primary"
                 >
                     Thêm thể loại
                 </Button>
@@ -155,6 +180,7 @@ const GenreManagement = () => {
                 <Table
                     columns={columns}
                     dataSource={genres}
+                    loading={loading}
                     rowKey="id"
                     pagination={{
                         ...pagination,
@@ -180,6 +206,7 @@ const GenreManagement = () => {
                 onCancel={() => setIsModalVisible(false)}
                 okText={editingGenre ? 'Cập nhật' : 'Thêm'}
                 cancelText="Hủy"
+                confirmLoading={isModalVisible && loading}
                 centered
                 width={500}
             >

@@ -22,6 +22,7 @@ const theaterAPI = {
     createTheater: (theater) => apiClient.post(`/theaters`, theater),
     updateTheater: (id, theater) => apiClient.put(`/theaters/${id}`, theater),
     deleteTheater: (id) => apiClient.delete(`/theaters/${id}`),
+    updateTheaterCoordinates: (id) => apiClient.patch(`/theaters/${id}/coordinates`),
 };
 
 export { authAPI, genreAPI, theaterAPI };

@@ -137,6 +137,21 @@ const TheaterManagement = () => {
         }
     };
 
+    const handleUpdateCoordinates = async (theater) => {
+        try {
+            setLoading(true);
+            await theaterAPI.updateTheaterCoordinates(theater.id);
+            fetchTheaters(pagination?.current || 1, pagination?.pageSize || 5);
+            message.success(`Đã cập nhật tọa độ cho rạp "${theater.name}" từ địa chỉ`);
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || 'Không thể cập nhật tọa độ!';
+            message.error(errorMsg);
+            console.log(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleModalOk = () => {
         form.validateFields().then(async (values) => {
             if (editingTheater && !hasFormChanged(originalTheaterData, values)) {
@@ -237,6 +252,27 @@ const TheaterManagement = () => {
                         icon={<EditOutlined />}
                         onClick={() => handleEdit(record)}
                     />
+                    <Popconfirm
+                        title={
+                            <div className="max-w-50!">
+                                <p>Cập nhật tọa độ từ địa chỉ?</p>
+                                <p style={{ fontSize: 12, color: '#999' }} className="line-clamp-1">
+                                    Địa chỉ: {record.address}
+                                </p>
+                            </div>
+                        }
+                        onConfirm={() => handleUpdateCoordinates(record)}
+                        okText="Cập nhật"
+                        cancelText="Hủy"
+                    >
+                        <Button
+                            type="default"
+                            className="bg-green-500! text-white!"
+                            size="small"
+                            icon={<EnvironmentOutlined />}
+                            title="Cập nhật tọa độ từ địa chỉ"
+                        />
+                    </Popconfirm>
                     <Popconfirm
                         title="Bạn có chắc chắn muốn xóa rạp này?"
                         onConfirm={() => handleDeleteTheater(record.id)}
@@ -380,21 +416,6 @@ const TheaterManagement = () => {
                             </Form.Item>
                         </Space.Compact>
                     </Form.Item>
-
-                    {!editingTheater && (
-                        <div
-                            style={{
-                                padding: '8px 12px',
-                                background: '#f0f2f5',
-                                borderRadius: '4px',
-                                fontSize: '12px',
-                                color: '#666',
-                            }}
-                        >
-                            <EnvironmentOutlined /> Để trống tọa độ, hệ thống sẽ tự động lấy từ địa
-                            chỉ sau khi tạo rạp.
-                        </div>
-                    )}
                 </Form>
             </Modal>
             {/* View Theater Detail Modal */}

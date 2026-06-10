@@ -209,12 +209,13 @@ const TheaterManagement = () => {
             title: 'Số điện thoại',
             dataIndex: 'phone',
             key: 'phone',
+            width: 150,
             sorter: (a, b) => a.phone - b.phone,
         },
         {
             title: 'Tọa độ',
             key: 'coordinates',
-            width: 200,
+            width: 150,
             render: (_, record) => (
                 <Space direction="vertical" size="small">
                     {record.coordinates?.coordinates &&

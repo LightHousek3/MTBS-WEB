@@ -20,8 +20,9 @@ const Login = () => {
             if (isAdmin) {
                 message.success('Đăng nhập thành công!');
                 navigate('/admin');
+            } else {
+                navigate('/unauthorized');
             }
-            navigate('/unauthorized');
         } catch (error) {
             console.log(error);
             message.error(error.response.data?.message || 'Đăng nhập thất bại!');

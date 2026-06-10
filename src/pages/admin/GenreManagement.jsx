@@ -117,14 +117,14 @@ const GenreManagement = () => {
             title: 'Ngày tạo',
             dataIndex: 'createdAt',
             key: 'createdAt',
-            sorter: (a, b) => new Date(a) - new Date(b),
+            sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
             render: (createdAt) => <span>{formatDate(createdAt, 'HH:mm dd/MM/yyyy')}</span>,
         },
         {
             title: 'Ngày chỉnh sửa',
             dataIndex: 'updatedAt',
             key: 'updatedAt',
-            sorter: (a, b) => new Date(a) - new Date(b),
+            sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
             render: (updatedAt) => <span>{formatDate(updatedAt, 'HH:mm dd/MM/yyyy')}</span>,
         },
         {

@@ -68,7 +68,6 @@ export const AuthProvider = ({ children }) => {
         console.log('user', user);
         setAccessToken(accessToken);
         setUser(user);
-
         return user?.role === 'ADMIN';
     };
 

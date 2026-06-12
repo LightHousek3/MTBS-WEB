@@ -6,7 +6,14 @@ import { AuthProvider } from './contexts/AuthContext';
 import { PublicRoute, ProtectedRoute, GlobalAuthListener, AdminLayout } from './components';
 import { NotFound, UnAuthorized } from './pages/error';
 import { Login } from './pages/auth';
-import { GenreManagement, TheaterManagement } from './pages/admin';
+import {
+    GenreManagement,
+    MovieManagement,
+    RedeemGiftManagement,
+    RedeemManagement,
+    ShowtimeManagement,
+    TheaterManagement,
+} from './pages/admin';
 
 function App() {
     return (
@@ -41,6 +48,10 @@ function App() {
                                 <Route index element={<NotFound />} />
                                 <Route path="genres" element={<GenreManagement />} />
                                 <Route path="theaters" element={<TheaterManagement />} />
+                                <Route path="movies" element={<MovieManagement />} />
+                                <Route path="showtimes" element={<ShowtimeManagement />} />
+                                <Route path="redeems" element={<RedeemManagement />} />
+                                <Route path="redeem-gifts" element={<RedeemGiftManagement />} />
                             </Route>
                             {/* Error pages */}
                             <Route path="/unauthorized" element={<UnAuthorized />} />

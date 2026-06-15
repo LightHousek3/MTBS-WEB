@@ -65,12 +65,10 @@ export const hasNewFile = (fileList, originalUrl) => {
 
     const file = fileList[0];
 
-    // Nếu có originFileObj => file mới được chọn
     if (file.originFileObj) {
         return true;
     }
 
-    // Nếu URL thay đổi
     if (file.url && file.url !== originalUrl) {
         return true;
     }

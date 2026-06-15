@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { apiClient } from '../config';
 
 // Authentication API
@@ -25,4 +26,24 @@ const theaterAPI = {
     updateTheaterCoordinates: (id) => apiClient.patch(`/theaters/${id}/coordinates`),
 };
 
-export { authAPI, genreAPI, theaterAPI };
+// Service API
+const serviceAPI = {
+    getServices: (params) => apiClient.get(`/services`, { params }),
+    getServiceById: (id) => apiClient.get(`/services/${id}`),
+    createService: (service) => apiClient.post('/services', service),
+    updateService: (id, service) => apiClient.put(`/services/${id}`, service),
+    deleteService: (id) => apiClient.delete(`/services/${id}`),
+};
+
+// Cloudinary API
+const cloudinaryAPI = {
+    uploadImage: (file, folder) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'movie_ticket');
+        formData.append('folder', folder);
+        return axios.post(`https://api.cloudinary.com/v1_1/dtnmtkqq4/image/upload`, formData);
+    },
+};
+
+export { authAPI, genreAPI, theaterAPI, serviceAPI, cloudinaryAPI };

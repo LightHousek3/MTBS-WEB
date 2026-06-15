@@ -55,6 +55,12 @@ const AdminLayout = () => {
             label: 'Quản lý rạp',
             onClick: () => navigate('/admin/theaters'),
         },
+        {
+            key: '/admin/services',
+            icon: <CoffeeOutlined />,
+            label: 'Quản lý dịch vụ',
+            onClick: () => navigate('/admin/services'),
+        },
     ];
 
     const handleLogout = () => {

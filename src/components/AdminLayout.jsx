@@ -61,6 +61,30 @@ const AdminLayout = () => {
             label: 'Quản lý dịch vụ',
             onClick: () => navigate('/admin/services'),
         },
+        {
+            key: '/admin/movies',
+            icon: <VideoCameraOutlined />,
+            label: 'Quản lý phim',
+            onClick: () => navigate('/admin/movies'),
+        },
+        {
+            key: '/admin/showtimes',
+            icon: <FieldTimeOutlined />,
+            label: 'Quản lý suất chiếu',
+            onClick: () => navigate('/admin/showtimes'),
+        },
+        {
+            key: '/admin/redeems',
+            icon: <GiftOutlined />,
+            label: 'Quản lý quà đổi điểm',
+            onClick: () => navigate('/admin/redeems'),
+        },
+        {
+            key: '/admin/redeem-gifts',
+            icon: <ReconciliationOutlined />,
+            label: 'Quản lý giao dịch đổi quà',
+            onClick: () => navigate('/admin/redeem-gifts'),
+        },
     ];
 
     const handleLogout = () => {

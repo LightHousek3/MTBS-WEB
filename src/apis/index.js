@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { apiClient } from '../config';
+// Base API configuration
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '';
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '';
 
 // Authentication API
 const authAPI = {
@@ -40,10 +43,61 @@ const cloudinaryAPI = {
     uploadImage: (file, folder) => {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', 'movie_ticket');
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         formData.append('folder', folder);
-        return axios.post(`https://api.cloudinary.com/v1_1/dtnmtkqq4/image/upload`, formData);
+        return axios.post(
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            formData,
+        );
     },
 };
 
-export { authAPI, genreAPI, theaterAPI, serviceAPI, cloudinaryAPI };
+const movieAPI = {
+    getMovies: (params) => apiClient.get(`/movies`, { params }),
+    getMovieById: (id) => apiClient.get(`/movies/${id}`),
+    createMovie: (movie) => apiClient.post('/movies', movie),
+    updateMovie: (id, movie) => apiClient.put(`/movies/${id}`, movie),
+    deleteMovie: (id) => apiClient.delete(`/movies/${id}`),
+};
+
+const showtimeAPI = {
+    getShowtimes: (params = {}) => apiClient.get('/showtimes', { params }),
+    getShowtimeById: (id, params = {}) => apiClient.get(`/showtimes/${id}`, { params }),
+    getShowtimeSeating: (id) => apiClient.get(`/showtimes/${id}/seating`),
+    createShowtime: (showtime) => apiClient.post('/showtimes', showtime),
+    updateShowtime: (id, showtime) => apiClient.put(`/showtimes/${id}`, showtime),
+    deleteShowtime: (id) => apiClient.delete(`/showtimes/${id}`),
+};
+
+const screenAPI = {
+    getScreens: () => apiClient.get('/screens'),
+};
+
+const redeemAPI = {
+    getRedeems: (params = {}) => apiClient.get('/redeems', { params }),
+    getRedeemById: (id) => apiClient.get(`/redeems/${id}`),
+    createRedeem: (redeem) => apiClient.post('/redeems', redeem),
+    updateRedeem: (id, redeem) => apiClient.put(`/redeems/${id}`, redeem),
+    deleteRedeem: (id) => apiClient.delete(`/redeems/${id}`),
+};
+
+const redeemGiftAPI = {
+    getRedeemGifts: (params = {}) => apiClient.get('/redeem-gifts', { params }),
+    getRedeemGiftById: (id) => apiClient.get(`/redeem-gifts/${id}`),
+    createRedeemGift: (redeemGift) => apiClient.post('/redeem-gifts', redeemGift),
+    updateRedeemGift: (id, redeemGift) => apiClient.put(`/redeem-gifts/${id}`, redeemGift),
+    deleteRedeemGift: (id) => apiClient.delete(`/redeem-gifts/${id}`),
+};
+
+export {
+    authAPI,
+    genreAPI,
+    theaterAPI,
+    serviceAPI,
+    cloudinaryAPI,
+    movieAPI,
+    showtimeAPI,
+    screenAPI,
+    redeemAPI,
+    redeemGiftAPI,
+};

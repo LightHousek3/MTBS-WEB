@@ -45,6 +45,8 @@ const getUserName = (user) => {
   return user.fullName || `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email || "-";
 };
 
+const getRedeemGiftPhone = (item) => item?.phone || item?.user?.phone || "-";
+
 const escapeExcelValue = (value) =>
   String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -199,6 +201,7 @@ const RedeemGiftManagement = () => {
       "Mã giao dịch",
       "Khách hàng",
       "Email",
+      "Số điện thoại",
       "Quà",
       "Số lượng",
       "Địa chỉ giao hàng",
@@ -209,6 +212,7 @@ const RedeemGiftManagement = () => {
       item.transactionNo,
       getUserName(item.user),
       item.user?.email || "",
+      getRedeemGiftPhone(item),
       item.redeem?.name || "",
       item.amount,
       item.address || "",
@@ -318,6 +322,11 @@ const RedeemGiftManagement = () => {
       dataIndex: "redeem",
       key: "redeem",
       render: (redeem) => redeem?.name || "-",
+    },
+    {
+      title: "Số điện thoại",
+      key: "phone",
+      render: (_, record) => getRedeemGiftPhone(record),
     },
     {
       title: "Số lượng",
@@ -471,6 +480,9 @@ const RedeemGiftManagement = () => {
               <Descriptions.Item label="Khách hàng">
                 {getUserName(editingRedeemGift.user)}
               </Descriptions.Item>
+              <Descriptions.Item label="Số điện thoại">
+                {getRedeemGiftPhone(editingRedeemGift)}
+              </Descriptions.Item>
               <Descriptions.Item label="Quà">
                 {editingRedeemGift.redeem?.name || "-"}
               </Descriptions.Item>
@@ -508,6 +520,9 @@ const RedeemGiftManagement = () => {
             </Descriptions.Item>
             <Descriptions.Item label="Khách hàng" span={2}>
               {getUserName(viewingRedeemGift.user)} - {viewingRedeemGift.user?.email || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Số điện thoại" span={2}>
+              {getRedeemGiftPhone(viewingRedeemGift)}
             </Descriptions.Item>
             <Descriptions.Item label="Quà" span={2}>
               {viewingRedeemGift.redeem?.name || "-"}

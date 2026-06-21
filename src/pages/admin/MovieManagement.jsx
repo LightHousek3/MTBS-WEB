@@ -25,13 +25,10 @@ import {
   UploadOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
-import { movieAPI, genreAPI } from "../../apis";
+import { cloudinaryAPI, movieAPI, genreAPI } from "../../apis";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
-
-const cloudinaryCloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const cloudinaryUploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
 const getMediaUrl = (media) => {
   if (!media) return "";
@@ -107,12 +104,14 @@ const MovieManagement = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [viewingMovie, setViewingMovie] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const [form] = Form.useForm();
   const [imageFile, setImageFile] = useState(null);
   const [trailerFile, setTrailerFile] = useState(null);
 
   const [imageList, setImageList] = useState([]);
+  const [previewImage, setPreviewImage] = useState("");
   const [trailerList, setTrailerList] = useState([]);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
@@ -150,54 +149,17 @@ const MovieManagement = () => {
     fetchMovies();
   }, [page, pageSize, keyword]);
 
-  const uploadToCloudinaryWithProgress = (file, resourceType, onProgress) =>
-    new Promise((resolve, reject) => {
-      if (!cloudinaryCloudName || !cloudinaryUploadPreset) {
-        reject(
-          new Error(
-            "Thiếu VITE_CLOUDINARY_CLOUD_NAME hoặc VITE_CLOUDINARY_UPLOAD_PRESET",
-          ),
-        );
-        return;
-      }
-
-      const uploadData = new FormData();
-      uploadData.append("file", file);
-      uploadData.append("upload_preset", cloudinaryUploadPreset);
-
-      const xhr = new XMLHttpRequest();
-      xhr.open(
-        "POST",
-        `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/${resourceType}/upload`,
-      );
-
-      xhr.upload.onprogress = (event) => {
-        if (!event.lengthComputable) return;
-        onProgress?.(Math.round((event.loaded / event.total) * 100));
-      };
-
-      xhr.onload = () => {
-        const result = JSON.parse(xhr.responseText || "{}");
-
-        if (xhr.status < 200 || xhr.status >= 300) {
-          reject(
-            new Error(result?.error?.message || "Upload Cloudinary thất bại"),
-          );
-          return;
-        }
-
-        resolve({
-          url: result.secure_url,
-          publicId: result.public_id,
-        });
-      };
-
-      xhr.onerror = () => {
-        reject(new Error("Không thể kết nối tới Cloudinary"));
-      };
-
-      xhr.send(uploadData);
+  const uploadMovieMedia = async (file, resourceType, onProgress) => {
+    const response = await cloudinaryAPI.upload(file, {
+      resourceType,
+      onProgress,
     });
+
+    return {
+      url: response.data.secure_url,
+      publicId: response.data.public_id,
+    };
+  };
 
   const addMovie = async (movieData) => {
     try {
@@ -240,6 +202,7 @@ const MovieManagement = () => {
     setIsImageMarkedForDeletion(false);
     setIsTrailerMarkedForDeletion(false);
     setImageList([]); //   Xóa danh sách ảnh cũ
+    setPreviewImage("");
     setTrailerList([]); //   Xóa danh sách trailer cũ
     setIsEditMode(false);
     setOriginalMovieData(null);
@@ -340,7 +303,7 @@ const MovieManagement = () => {
         if (imageFile) {
           const imageAsset =
             uploadedImageAsset ||
-            (await uploadToCloudinaryWithProgress(
+            (await uploadMovieMedia(
               imageFile,
               "image",
               setImageUploadProgress,
@@ -354,7 +317,7 @@ const MovieManagement = () => {
         if (trailerFile) {
           const trailerAsset =
             uploadedTrailerAsset ||
-            (await uploadToCloudinaryWithProgress(
+            (await uploadMovieMedia(
               trailerFile,
               "video",
               setTrailerUploadProgress,
@@ -376,7 +339,7 @@ const MovieManagement = () => {
         if (imageFile) {
           const imageAsset =
             uploadedImageAsset ||
-            (await uploadToCloudinaryWithProgress(
+            (await uploadMovieMedia(
               imageFile,
               "image",
               setImageUploadProgress,
@@ -388,7 +351,7 @@ const MovieManagement = () => {
         if (trailerFile) {
           const trailerAsset =
             uploadedTrailerAsset ||
-            (await uploadToCloudinaryWithProgress(
+            (await uploadMovieMedia(
               trailerFile,
               "video",
               setTrailerUploadProgress,
@@ -409,6 +372,7 @@ const MovieManagement = () => {
       setIsEditMode(false);
       setImageFile(null);
       setTrailerFile(null);
+      setPreviewImage("");
       setImageUploadProgress(0);
       setTrailerUploadProgress(0);
       setUploadedImageAsset(null);
@@ -507,6 +471,7 @@ const MovieManagement = () => {
     });
 
     //   Hiển thị sẵn ảnh poster
+    setPreviewImage(getMediaUrl(movie.image));
     setImageList(
       getMediaUrl(movie.image)
         ? [
@@ -565,9 +530,21 @@ const MovieManagement = () => {
     }
   };
 
-  const handleViewDetail = (movie) => {
-    setViewingMovie(movie);
-    setIsDetailModalVisible(true);
+  const handleViewDetail = async (movie) => {
+    try {
+      setIsDetailModalVisible(true);
+      setDetailLoading(true);
+      setViewingMovie(null);
+
+      const response = await movieAPI.getMovieById(movie.id || movie._id);
+      setViewingMovie(response.data.data || response.data);
+    } catch (error) {
+      message.error(error.response?.data?.message || "Không thể tải chi tiết phim!");
+      console.error("Không thể tải chi tiết phim!", error);
+      setIsDetailModalVisible(false);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -596,9 +573,9 @@ const MovieManagement = () => {
       render: (img) => (
         <Image
           src={getMediaUrl(img) || "https://placehold.net/400x400.png"}
+          alt="movie"
           width={70}
           style={{ borderRadius: 8 }}
-          preview={false}
         />
       ),
       width: 100,
@@ -749,7 +726,7 @@ const MovieManagement = () => {
         <Title level={2} style={{ margin: 0 }}>
           Quản lý phim
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+        <Button className="bg-primary" type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
           Thêm phim
         </Button>
       </div>
@@ -812,6 +789,7 @@ const MovieManagement = () => {
           setEditingMovie(null);
           setIsEditMode(false);
           setImageList([]);
+          setPreviewImage("");
           setTrailerList([]);
           setImageFile(null);
           setTrailerFile(null);
@@ -1030,12 +1008,14 @@ const MovieManagement = () => {
                   setImageUploadProgress(0);
                   setUploadedImageAsset(null);
                   setIsImageMarkedForDeletion(false);
+                  const previewUrl = URL.createObjectURL(file);
+                  setPreviewImage(previewUrl);
                   setImageList([
                     {
                       uid: file.uid,
                       name: file.name,
                       status: "done",
-                      url: URL.createObjectURL(file),
+                      url: previewUrl,
                     },
                   ]);
                   return false;
@@ -1047,12 +1027,23 @@ const MovieManagement = () => {
                   setUploadedImageAsset(null);
                   setIsImageMarkedForDeletion(true);
                   setImageList([]);
+                  setPreviewImage("");
                 }}
               >
                 <Button icon={<UploadOutlined />}>
                   {imageList.length > 0 ? "Chọn lại ảnh" : "Chọn ảnh"}
                 </Button>
               </Upload>
+              {previewImage && (
+                <div className="mt-3">
+                  <Image
+                    src={previewImage}
+                    alt="preview"
+                    width={200}
+                    style={{ borderRadius: 8 }}
+                  />
+                </div>
+              )}
               {imageFile && (
                 <Progress
                   percent={imageUploadProgress}
@@ -1128,6 +1119,7 @@ const MovieManagement = () => {
         title={<div className="text-xl font-bold">Chi tiết phim</div>}
         open={isDetailModalVisible}
         onCancel={() => {
+          if (detailLoading) return;
           setIsDetailModalVisible(false);
           setViewingMovie(null);
         }}
@@ -1138,12 +1130,14 @@ const MovieManagement = () => {
                 setIsDetailModalVisible(false);
                 setViewingMovie(null);
               }}
+              disabled={detailLoading}
             >
               Đóng
             </Button>
             <Button
               type="primary"
               icon={<EditOutlined />}
+              disabled={detailLoading || !viewingMovie}
               onClick={() => {
                 setIsDetailModalVisible(false);
                 handleEdit(viewingMovie);
@@ -1157,7 +1151,11 @@ const MovieManagement = () => {
         centered
         className="movie-detail-modal"
       >
-        {viewingMovie && (
+        {detailLoading ? (
+          <div className="py-10 text-center">
+            <Text>Đang tải chi tiết phim...</Text>
+          </div>
+        ) : viewingMovie && (
           <div
             className="space-y-6 max-h-[600px] overflow-y-auto pr-2"
             data-lenis-prevent

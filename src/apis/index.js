@@ -40,16 +40,33 @@ const serviceAPI = {
 
 // Cloudinary API
 const cloudinaryAPI = {
-    uploadImage: (file, folder) => {
+    upload: (file, { resourceType = 'image', folder, onProgress } = {}) => {
+        if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+            return Promise.reject(
+                new Error('Missing VITE_CLOUDINARY_CLOUD_NAME or VITE_CLOUDINARY_UPLOAD_PRESET'),
+            );
+        }
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-        formData.append('folder', folder);
+        if (folder) {
+            formData.append('folder', folder);
+        }
+
         return axios.post(
-            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
             formData,
+            {
+                onUploadProgress: (event) => {
+                    if (!event.total) return;
+                    onProgress?.(Math.round((event.loaded / event.total) * 100));
+                },
+            },
         );
     },
+    uploadImage: (file, folder, onProgress) =>
+        cloudinaryAPI.upload(file, { resourceType: 'image', folder, onProgress }),
 };
 
 const movieAPI = {

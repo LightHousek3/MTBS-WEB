@@ -303,6 +303,7 @@ const RedeemGiftManagement = () => {
       title: "Mã giao dịch",
       dataIndex: "transactionNo",
       key: "transactionNo",
+      width: 160,
     },
     {
       title: "Khách hàng",
@@ -324,48 +325,32 @@ const RedeemGiftManagement = () => {
       render: (redeem) => redeem?.name || "-",
     },
     {
-      title: "Số điện thoại",
-      key: "phone",
-      render: (_, record) => getRedeemGiftPhone(record),
-    },
-    {
       title: "Số lượng",
       dataIndex: "amount",
       key: "amount",
-    },
-    {
-      title: "Địa chỉ",
-      dataIndex: "address",
-      key: "address",
-      width: 220,
-      ellipsis: true,
-      render: (value) => value || "-",
+      width: 90,
     },
     {
       title: "Dự kiến giao",
       dataIndex: "expectedDeliveryDate",
       key: "expectedDeliveryDate",
+      width: 130,
       render: (value) => formatDate(value, "dd/MM/yyyy") || "-",
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      width: 130,
       render: (value) => {
         const config = getStatusConfig(value);
         return <Tag color={config.color}>{config.label}</Tag>;
       },
     },
     {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (value) => formatDate(value, "HH:mm dd/MM/yyyy"),
-    },
-    {
       title: "Thao tác",
       key: "actions",
-      width: 180,
+      width: 150,
       render: (_, record) => (
         <Space size="small">
           <Button
@@ -382,9 +367,7 @@ const RedeemGiftManagement = () => {
               size="small"
               icon={<CheckCircleOutlined />}
               onClick={() => openUpdateStatusModal(record)}
-            >
-              Cập nhật trạng thái
-            </Button>
+            />
           )}
         </Space>
       ),
@@ -452,7 +435,7 @@ const RedeemGiftManagement = () => {
           onChange={(nextPagination) => {
             fetchRedeemGifts(nextPagination.current, nextPagination.pageSize);
           }}
-          scroll={{ x: 1250 }}
+          scroll={{ x: 900 }}
         />
       </Card>
 

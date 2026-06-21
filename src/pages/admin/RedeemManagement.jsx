@@ -3,6 +3,7 @@ import {
   App,
   Button,
   Card,
+  Descriptions,
   Form,
   Image,
   Input,
@@ -20,18 +21,17 @@ import {
 import {
   DeleteOutlined,
   EditOutlined,
+  EyeOutlined,
   PlusOutlined,
   SearchOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import { redeemAPI } from "../../apis";
+import { cloudinaryAPI, redeemAPI } from "../../apis";
 import { formatDate, hasFormChanged } from "../../utils";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 
-const cloudinaryCloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-const cloudinaryUploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 const ALL_STATUS_VALUE = "ALL";
 
 const REDEEM_STATUS_OPTIONS = [
@@ -69,12 +69,15 @@ const RedeemManagement = () => {
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRedeem, setEditingRedeem] = useState(null);
+  const [viewingRedeem, setViewingRedeem] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [originalData, setOriginalData] = useState(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState();
   const hasMountedRef = useRef(false);
   const [imageFile, setImageFile] = useState(null);
   const [imageList, setImageList] = useState([]);
+  const [previewImage, setPreviewImage] = useState("");
   const [imageUploadProgress, setImageUploadProgress] = useState(0);
   const [uploadedImageAsset, setUploadedImageAsset] = useState(null);
   const [isImageMarkedForDeletion, setIsImageMarkedForDeletion] =
@@ -128,58 +131,23 @@ const RedeemManagement = () => {
     fetchRedeems(1, pagination.pageSize, search, status);
   }, [status]);
 
-  const uploadToCloudinaryWithProgress = (file, onProgress) =>
-    new Promise((resolve, reject) => {
-      if (!cloudinaryCloudName || !cloudinaryUploadPreset) {
-        reject(
-          new Error(
-            "Thieu VITE_CLOUDINARY_CLOUD_NAME hoac VITE_CLOUDINARY_UPLOAD_PRESET",
-          ),
-        );
-        return;
-      }
+  const uploadRedeemImage = async (file, onProgress) => {
+    const response = await cloudinaryAPI.uploadImage(
+      file,
+      undefined,
+      onProgress,
+    );
 
-      const uploadData = new FormData();
-      uploadData.append("file", file);
-      uploadData.append("upload_preset", cloudinaryUploadPreset);
-
-      const xhr = new XMLHttpRequest();
-      xhr.open(
-        "POST",
-        `https://api.cloudinary.com/v1_1/${cloudinaryCloudName}/image/upload`,
-      );
-
-      xhr.upload.onprogress = (event) => {
-        if (!event.lengthComputable) return;
-        onProgress?.(Math.round((event.loaded / event.total) * 100));
-      };
-
-      xhr.onload = () => {
-        const result = JSON.parse(xhr.responseText || "{}");
-
-        if (xhr.status < 200 || xhr.status >= 300) {
-          reject(
-            new Error(result?.error?.message || "Upload Cloudinary thất bại"),
-          );
-          return;
-        }
-
-        resolve({
-          url: result.secure_url,
-          publicId: result.public_id,
-        });
-      };
-
-      xhr.onerror = () => {
-        reject(new Error("Không thể kết nối tới Cloudinary"));
-      };
-
-      xhr.send(uploadData);
-    });
+    return {
+      url: response.data.secure_url,
+      publicId: response.data.public_id,
+    };
+  };
 
   const resetImageState = () => {
     setImageFile(null);
     setImageList([]);
+    setPreviewImage("");
     setImageUploadProgress(0);
     setUploadedImageAsset(null);
     setIsImageMarkedForDeletion(false);
@@ -209,6 +177,7 @@ const RedeemManagement = () => {
     setUploadedImageAsset(record.image || null);
     setIsImageMarkedForDeletion(false);
     setImageUploadProgress(0);
+    setPreviewImage(record.image?.url || "");
     setImageList(
       record.image?.url
         ? [
@@ -247,7 +216,7 @@ const RedeemManagement = () => {
       if (imageFile) {
         imageAsset =
           uploadedImageAsset ||
-          (await uploadToCloudinaryWithProgress(
+          (await uploadRedeemImage(
             imageFile,
             setImageUploadProgress,
           ));
@@ -305,6 +274,20 @@ const RedeemManagement = () => {
     }
   };
 
+  const openDetailModal = async (id) => {
+    try {
+      setDetailLoading(true);
+      setViewingRedeem(null);
+      const response = await redeemAPI.getRedeemById(id);
+      setViewingRedeem(response.data.data);
+    } catch (error) {
+      message.error(error.response?.data?.message || "Không thể tải chi tiết quà.");
+      console.error(error);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   const columns = [
     {
       title: "Ảnh",
@@ -313,10 +296,10 @@ const RedeemManagement = () => {
       render: (image) => (
         <Image
           src={image?.url || "https://placehold.co/80x80?text=Gift"}
+          alt="redeem"
           width={56}
           height={56}
           style={{ objectFit: "cover", borderRadius: 8 }}
-          preview={false}
         />
       ),
     },
@@ -358,6 +341,12 @@ const RedeemManagement = () => {
       render: (_, record) => (
         <Space size="small">
           <Button
+            size="small"
+            icon={<EyeOutlined />}
+            loading={detailLoading}
+            onClick={() => openDetailModal(record.id)}
+          />
+          <Button
             type="primary"
             size="small"
             icon={<EditOutlined />}
@@ -384,7 +373,7 @@ const RedeemManagement = () => {
         <Title level={2} style={{ margin: 0 }}>
           Quản lý quà đổi điểm
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+        <Button className="bg-primary" type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
           Thêm quà
         </Button>
       </div>
@@ -505,12 +494,14 @@ const RedeemManagement = () => {
                 setImageUploadProgress(0);
                 setUploadedImageAsset(null);
                 setIsImageMarkedForDeletion(false);
+                const previewUrl = URL.createObjectURL(file);
+                setPreviewImage(previewUrl);
                 setImageList([
                   {
                     uid: file.uid,
                     name: file.name,
                     status: "done",
-                    url: URL.createObjectURL(file),
+                    url: previewUrl,
                   },
                 ]);
                 return false;
@@ -522,12 +513,23 @@ const RedeemManagement = () => {
                 setUploadedImageAsset(null);
                 setIsImageMarkedForDeletion(true);
                 setImageList([]);
+                setPreviewImage("");
               }}
             >
               <Button icon={<UploadOutlined />}>
                 {imageList.length > 0 ? "Chọn lại ảnh" : "Chọn ảnh"}
               </Button>
             </Upload>
+            {previewImage && (
+              <div className="mt-3">
+                <Image
+                  src={previewImage}
+                  alt="preview"
+                  width={200}
+                  style={{ borderRadius: 8 }}
+                />
+              </div>
+            )}
             {imageFile && (
               <Progress
                 percent={imageUploadProgress}
@@ -543,6 +545,67 @@ const RedeemManagement = () => {
             )}
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title="Chi tiết quà đổi điểm"
+        open={detailLoading || Boolean(viewingRedeem)}
+        onCancel={() => {
+          if (detailLoading) return;
+          setViewingRedeem(null);
+        }}
+        footer={null}
+        width={720}
+        centered
+        confirmLoading={detailLoading}
+      >
+        {detailLoading ? (
+          <div className="py-10 text-center">
+            <Text>Đang tải chi tiết quà...</Text>
+          </div>
+        ) : (
+          viewingRedeem && (
+            <div className="space-y-4">
+              <div className="flex gap-4 items-start">
+                <Image
+                  src={viewingRedeem.image?.url || "https://placehold.co/160x160?text=Gift"}
+                  width={140}
+                  height={140}
+                  style={{ objectFit: "cover", borderRadius: 8 }}
+                />
+                <div className="flex-1 min-w-0">
+                  <Title level={4} style={{ marginTop: 0, marginBottom: 8 }}>
+                    {viewingRedeem.name}
+                  </Title>
+                  <Tag color={getStatusConfig(viewingRedeem.status).color}>
+                    {getStatusConfig(viewingRedeem.status).label}
+                  </Tag>
+                  <Text className="block mt-3" type="secondary">
+                    {viewingRedeem.description || "Chưa có mô tả."}
+                  </Text>
+                </div>
+              </div>
+
+              <Descriptions bordered column={2} size="small">
+                <Descriptions.Item label="Điểm cần đổi">
+                  {Number(viewingRedeem.pointsRequired || 0).toLocaleString("vi-VN")}
+                </Descriptions.Item>
+                <Descriptions.Item label="Tồn kho">
+                  {viewingRedeem.quantity}
+                </Descriptions.Item>
+                <Descriptions.Item label="Ngày tạo">
+                  {formatDate(viewingRedeem.createdAt, "HH:mm dd/MM/yyyy") || "-"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Cập nhật">
+                  {formatDate(viewingRedeem.updatedAt, "HH:mm dd/MM/yyyy") || "-"}
+                </Descriptions.Item>
+                <Descriptions.Item label="ID" span={2}>
+                  <Text copyable>{viewingRedeem.id || viewingRedeem._id}</Text>
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
+          )
+        )}
       </Modal>
     </div>
   );

@@ -325,7 +325,7 @@ const ShowtimeManagement = () => {
         <Title level={2} style={{ margin: 0 }}>
           Quản lý suất chiếu
         </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+        <Button className="bg-primary" type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
           Thêm suất chiếu
         </Button>
       </div>

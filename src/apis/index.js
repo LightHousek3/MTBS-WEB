@@ -106,6 +106,14 @@ const redeemGiftAPI = {
     deleteRedeemGift: (id) => apiClient.delete(`/redeem-gifts/${id}`),
 };
 
+const ticketPriceAPI = {
+    getTicketPrices: (params) => apiClient.get('/ticket-prices', { params }),
+    getTicketPriceById: (id) => apiClient.get(`/ticket-prices/${id}`),
+    createTicketPrice: (data) => apiClient.post('/ticket-prices', data),
+    updateTicketPrice: (id, data) => apiClient.put(`/ticket-prices/${id}`, data),
+    deleteTicketPrice: (id) => apiClient.delete(`/ticket-prices/${id}`),
+};
+
 export {
     authAPI,
     genreAPI,
@@ -117,4 +125,5 @@ export {
     screenAPI,
     redeemAPI,
     redeemGiftAPI,
+    ticketPriceAPI,
 };

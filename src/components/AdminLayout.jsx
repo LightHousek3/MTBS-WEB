@@ -85,6 +85,12 @@ const AdminLayout = () => {
             label: 'Quản lý giao dịch đổi quà',
             onClick: () => navigate('/admin/redeem-gifts'),
         },
+        {
+            key: '/admin/ticket-prices',
+            icon: <AccountBookOutlined />,
+            label: 'Quản lý giá vé',
+            onClick: () => navigate('/admin/ticket-prices'),
+        },
     ];
 
     const handleLogout = () => {

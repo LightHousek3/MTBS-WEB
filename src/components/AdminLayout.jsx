@@ -13,6 +13,8 @@ import {
     GiftOutlined,
     ReconciliationOutlined,
     CoffeeOutlined,
+    AccountBookOutlined,
+    TrophyOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';

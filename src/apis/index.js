@@ -90,18 +90,6 @@ const screenAPI = {
     getScreens: () => apiClient.get('/screens'),
 };
 
-const seatAPI = {
-    getSeats: (params = {}) => apiClient.get('/seats', { params }),
-    getSeatById: (id) => apiClient.get(`/seats/${id}`),
-    createSeat: (seat) => apiClient.post('/seats', seat),
-    updateSeat: (id, seat) => apiClient.put(`/seats/${id}`, seat),
-    deleteSeat: (id) => apiClient.delete(`/seats/${id}`),
-    updateSeatStatus: (id, status) => apiClient.patch(`/seats/${id}/status`, { status }),
-    createSeatsBulk: (payload) => apiClient.post('/seats/bulk', payload),
-    updateSeatsBulk: (payload) => apiClient.put('/seats/bulk', payload),
-    deleteSeatsBulk: (payload) => apiClient.delete('/seats/bulk', { data: payload }),
-};
-
 const redeemAPI = {
     getRedeems: (params = {}) => apiClient.get('/redeems', { params }),
     getRedeemById: (id) => apiClient.get(`/redeems/${id}`),
@@ -133,6 +121,7 @@ const ticketPriceAPI = {
     updateTicketPrice: (id, data) => apiClient.put(`/ticket-prices/${id}`, data),
     deleteTicketPrice: (id) => apiClient.delete(`/ticket-prices/${id}`),
 };
+
 export {
     authAPI,
     genreAPI,
@@ -142,7 +131,6 @@ export {
     movieAPI,
     showtimeAPI,
     screenAPI,
-    seatAPI,
     redeemAPI,
     redeemGiftAPI,
     promotionAPI,

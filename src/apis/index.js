@@ -106,6 +106,14 @@ const redeemGiftAPI = {
     deleteRedeemGift: (id) => apiClient.delete(`/redeem-gifts/${id}`),
 };
 
+const promotionAPI = {
+    getPromotions: (params = {}) => apiClient.get('/promotions', { params }),
+    getPromotionById: (id) => apiClient.get(`/promotions/${id}`),
+    createPromotion: (promotion) => apiClient.post('/promotions', promotion),
+    updatePromotion: (id, promotion) => apiClient.patch(`/promotions/${id}`, promotion),
+    deletePromotion: (id) => apiClient.delete(`/promotions/${id}`),
+};
+
 const ticketPriceAPI = {
     getTicketPrices: (params) => apiClient.get('/ticket-prices', { params }),
     getTicketPriceById: (id) => apiClient.get(`/ticket-prices/${id}`),
@@ -125,5 +133,6 @@ export {
     screenAPI,
     redeemAPI,
     redeemGiftAPI,
+    promotionAPI,
     ticketPriceAPI,
 };

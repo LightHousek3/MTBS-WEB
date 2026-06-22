@@ -91,6 +91,12 @@ const AdminLayout = () => {
             label: 'Quản lý giá vé',
             onClick: () => navigate('/admin/ticket-prices'),
         },
+        {
+            key: '/admin/promotions',
+            icon: <TrophyOutlined />,
+            label: 'Quản lý khuyến mãi',
+            onClick: () => navigate('/admin/promotions'),
+        },
     ];
 
     const handleLogout = () => {

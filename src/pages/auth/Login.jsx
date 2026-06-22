@@ -1,18 +1,18 @@
-import { Form, Input, Button, Card, Typography, Divider, App } from 'antd';
-import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Form, Input, Button, Card, Typography, App } from 'antd';
+import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
 import { Loading } from '../../components';
 
 const { Title, Text } = Typography;
+const LOGO_URL = 'https://res.cloudinary.com/dtnmtkqq4/image/upload/v1781900832/FG-logo_xzwezt.png';
 
 const Login = () => {
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const { message } = App.useApp();
-    const { state } = useLocation();
     const onFinish = async (values) => {
         try {
             setLoading(true);
@@ -46,9 +46,12 @@ const Login = () => {
                 styles={{ body: { padding: '2rem' } }}
             >
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4 btn-primary">
-                        <LoginOutlined className="text-2xl! text-white!" />
-                    </div>
+                    <img
+                        src={LOGO_URL}
+                        alt="MTBS"
+                        className="system-logo mx-auto mb-4"
+                        style={{ width: 168, height: 68 }}
+                    />
                     <Title level={2} className="mb-2! text-white/95! font-bold!">
                         Đăng nhập
                     </Title>

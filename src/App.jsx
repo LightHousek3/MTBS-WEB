@@ -1,6 +1,5 @@
 import { ConfigProvider, App as AppAntd } from 'antd';
 import viVN from 'antd/locale/vi_VN';
-import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { PublicRoute, ProtectedRoute, GlobalAuthListener, AdminLayout } from './components';

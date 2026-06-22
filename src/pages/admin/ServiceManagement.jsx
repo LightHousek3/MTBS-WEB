@@ -128,11 +128,10 @@ const ServiceManagement = () => {
                 ...(type && { type }),
             };
             const response = await serviceAPI.getServices(params);
-            const content = response.data.data || [];
+            const service = response.data.data || [];
             const total = response.data.meta.totalResults;
             const totalPages = response.data.meta.totalPages;
-            setServices(content);
-            console.log('response', response);
+            setServices(service);
             setPagination({
                 total,
                 current: page,
@@ -147,10 +146,19 @@ const ServiceManagement = () => {
         }
     };
 
-    const handleViewService = async (service) => {
-        console.log('service', service);
-        setViewingService(service);
-        setIsViewModalOpen(true);
+    const handleViewService = async (record) => {
+        try {
+            setLoading(true);
+            const response = await serviceAPI.getServiceById(record.id);
+            const service = response.data.data;
+            setViewingService(service);
+            setIsViewModalOpen(true);
+        } catch (error) {
+            message.error('Không thể tải chi tiết dịch vụ!');
+            console.log(error.response?.data?.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSearch = (value) => {
@@ -226,7 +234,6 @@ const ServiceManagement = () => {
             setLoading(true);
             if (fileList) {
                 const file = fileList[0].originFileObj;
-                console.log('file', file);
                 const response = await cloudinaryAPI.uploadImage(file, 'services');
                 values.imageUrl = response.data.secure_url;
             }
@@ -247,8 +254,6 @@ const ServiceManagement = () => {
 
             if (hasFileChanged) {
                 const file = fileList[0]?.originFileObj;
-
-                console.log('file', file);
                 const response = await cloudinaryAPI.uploadImage(file, 'services');
                 values.imageUrl = response.data.secure_url;
             }

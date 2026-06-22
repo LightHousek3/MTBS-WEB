@@ -4,30 +4,23 @@ import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     UserOutlined,
-    TeamOutlined,
     AppstoreOutlined,
     LogoutOutlined,
-    SettingOutlined,
     CodeSandboxOutlined,
     ShopOutlined,
-    DesktopOutlined,
     VideoCameraOutlined,
-    BorderOutlined,
-    RedEnvelopeOutlined,
-    AuditOutlined,
     FieldTimeOutlined,
     GiftOutlined,
-    PictureOutlined,
     ReconciliationOutlined,
-    TrophyOutlined,
     CoffeeOutlined,
-    AccountBookOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
+const LOGO_URL = 'https://res.cloudinary.com/dtnmtkqq4/image/upload/v1781900832/FG-logo_xzwezt.png';
+
 const { Header, Sider, Content } = Layout;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 const AdminLayout = () => {
     const [collapsed, setCollapsed] = useState(false);
@@ -113,9 +106,12 @@ const AdminLayout = () => {
                 width={256}
             >
                 <div className="flex items-center justify-center h-16 px-4 border-b border-r border-gray-200">
-                    <Title level={4} className="m-0! text-primary!">
-                        {collapsed ? 'A' : 'Admin Panel'}
-                    </Title>
+                    <img
+                        src={LOGO_URL}
+                        alt="MTBS"
+                        className="system-logo"
+                        style={{ width: collapsed ? 42 : 132, height: collapsed ? 42 : 48 }}
+                    />
                 </div>
 
                 <Menu

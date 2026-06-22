@@ -72,9 +72,19 @@ const TheaterManagement = () => {
         fetchTheaters(1, pagination?.pageSize || 5, value);
     };
 
-    const handleView = (theater) => {
-        setViewingTheater(theater);
-        setIsViewModalOpen(true);
+    const handleView = async (record) => {
+        try {
+            setLoading(true);
+            const response = await theaterAPI.getTheaterById(record.id);
+            const theater = response.data.data;
+            setViewingTheater(theater);
+            setIsViewModalOpen(true);
+        } catch (error) {
+            message.error('Không thể tải chi tiết rạp!');
+            console.log(error.response?.data?.message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleEdit = (theater) => {

@@ -5,6 +5,8 @@ import MovieManagement from './MovieManagement';
 import ShowtimeManagement from './ShowtimeManagement';
 import RedeemManagement from './RedeemManagement';
 import RedeemGiftManagement from './RedeemGiftManagement';
+import TicketPriceManagement from './TicketPriceManagement';
+import PromotionManagement from './PromotionManagement';
 
 export {
     GenreManagement,
@@ -14,4 +16,6 @@ export {
     ShowtimeManagement,
     RedeemManagement,
     RedeemGiftManagement,
+    TicketPriceManagement,
+    PromotionManagement,
 };

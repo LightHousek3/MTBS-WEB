@@ -40,16 +40,33 @@ const serviceAPI = {
 
 // Cloudinary API
 const cloudinaryAPI = {
-    uploadImage: (file, folder) => {
+    upload: (file, { resourceType = 'image', folder, onProgress } = {}) => {
+        if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+            return Promise.reject(
+                new Error('Missing VITE_CLOUDINARY_CLOUD_NAME or VITE_CLOUDINARY_UPLOAD_PRESET'),
+            );
+        }
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-        formData.append('folder', folder);
+        if (folder) {
+            formData.append('folder', folder);
+        }
+
         return axios.post(
-            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+            `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
             formData,
+            {
+                onUploadProgress: (event) => {
+                    if (!event.total) return;
+                    onProgress?.(Math.round((event.loaded / event.total) * 100));
+                },
+            },
         );
     },
+    uploadImage: (file, folder, onProgress) =>
+        cloudinaryAPI.upload(file, { resourceType: 'image', folder, onProgress }),
 };
 
 const movieAPI = {
@@ -89,6 +106,22 @@ const redeemGiftAPI = {
     deleteRedeemGift: (id) => apiClient.delete(`/redeem-gifts/${id}`),
 };
 
+const promotionAPI = {
+    getPromotions: (params = {}) => apiClient.get('/promotions', { params }),
+    getPromotionById: (id) => apiClient.get(`/promotions/${id}`),
+    createPromotion: (promotion) => apiClient.post('/promotions', promotion),
+    updatePromotion: (id, promotion) => apiClient.patch(`/promotions/${id}`, promotion),
+    deletePromotion: (id) => apiClient.delete(`/promotions/${id}`),
+};
+
+const ticketPriceAPI = {
+    getTicketPrices: (params) => apiClient.get('/ticket-prices', { params }),
+    getTicketPriceById: (id) => apiClient.get(`/ticket-prices/${id}`),
+    createTicketPrice: (data) => apiClient.post('/ticket-prices', data),
+    updateTicketPrice: (id, data) => apiClient.put(`/ticket-prices/${id}`, data),
+    deleteTicketPrice: (id) => apiClient.delete(`/ticket-prices/${id}`),
+};
+
 export {
     authAPI,
     genreAPI,
@@ -100,4 +133,6 @@ export {
     screenAPI,
     redeemAPI,
     redeemGiftAPI,
+    promotionAPI,
+    ticketPriceAPI,
 };

@@ -78,6 +78,18 @@ const AdminLayout = () => {
             label: 'Quản lý giao dịch đổi quà',
             onClick: () => navigate('/admin/redeem-gifts'),
         },
+        {
+            key: '/admin/ticket-prices',
+            icon: <AccountBookOutlined />,
+            label: 'Quản lý giá vé',
+            onClick: () => navigate('/admin/ticket-prices'),
+        },
+        {
+            key: '/admin/promotions',
+            icon: <TrophyOutlined />,
+            label: 'Quản lý khuyến mãi',
+            onClick: () => navigate('/admin/promotions'),
+        },
     ];
 
     const handleLogout = () => {

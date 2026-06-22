@@ -122,6 +122,17 @@ const ticketPriceAPI = {
     deleteTicketPrice: (id) => apiClient.delete(`/ticket-prices/${id}`),
 };
 
+/* ─── Statistic (Admin Dashboard) ──────────────────────────── */
+const statisticAPI = {
+    getOverview: () => apiClient.get('/bookings/stats/overview'),
+    getRevenueByGenre: (params) => apiClient.get('/bookings/stats/revenue-by-genre', { params }),
+    getDailySales: (params) => apiClient.get('/bookings/stats/revenue-by-month', { params }),
+    getYearlyRevenue: (params) => apiClient.get('/bookings/stats/revenue-by-year', { params }),
+    getTheaterRevenueByYear: (params) => apiClient.get('/bookings/stats/revenue-by-theater', { params }),
+    exportDashboard: () => apiClient.get('/bookings/stats/export', { responseType: 'blob' }),
+};
+
+/* ─── Exports ───────────────────────────────────────────────── */
 export {
     authAPI,
     genreAPI,
@@ -135,4 +146,5 @@ export {
     redeemGiftAPI,
     promotionAPI,
     ticketPriceAPI,
+    statisticAPI,
 };

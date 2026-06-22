@@ -3,6 +3,7 @@ import viVN from 'antd/locale/vi_VN';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { PublicRoute, ProtectedRoute, GlobalAuthListener, AdminLayout } from './components';
+import { Dashboard } from './pages/admin';
 import { NotFound, UnAuthorized } from './pages/error';
 import { Login } from './pages/auth';
 import {
@@ -47,7 +48,7 @@ function App() {
                                 element={<ProtectedRoute>{<AdminLayout />}</ProtectedRoute>}
                             >
                                 {/* Dashboard */}
-                                <Route index element={<NotFound />} />
+                                <Route index element={<Dashboard />} />
                                 <Route path="genres" element={<GenreManagement />} />
                                 <Route path="theaters" element={<TheaterManagement />} />
                                 <Route path="services" element={<ServiceManagement />} />

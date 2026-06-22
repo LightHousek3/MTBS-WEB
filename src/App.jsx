@@ -15,6 +15,7 @@ import {
     TheaterManagement,
     TicketPriceManagement,
     PromotionManagement,
+    SeatManagement,
 } from './pages/admin';
 
 function App() {
@@ -57,6 +58,7 @@ function App() {
                                 <Route path="redeem-gifts" element={<RedeemGiftManagement />} />
                                 <Route path="ticket-prices" element={<TicketPriceManagement />} />
                                 <Route path="promotions" element={<PromotionManagement />} />
+                                <Route path="seats" element={<SeatManagement />} />
                             </Route>
                             {/* Error pages */}
                             <Route path="/unauthorized" element={<UnAuthorized />} />

@@ -74,6 +74,12 @@ const AdminLayout = () => {
             onClick: () => navigate('/admin/showtimes'),
         },
         {
+            key: '/admin/seats',
+            icon: <AppstoreOutlined />,
+            label: 'Quản lý ghế',
+            onClick: () => navigate('/admin/seats'),
+        },
+        {
             key: '/admin/redeems',
             icon: <GiftOutlined />,
             label: 'Quản lý quà đổi điểm',

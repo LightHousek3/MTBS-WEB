@@ -94,6 +94,23 @@ const screenAPI = {
     deleteScreen: (id) => apiClient.delete(`/screens/${id}`),
 };
 
+const seatAPI = {
+    getSeats: (params = {}) => apiClient.get('/seats', { params }),
+    getSeatById: (id) => apiClient.get(`/seats/${id}`),
+    createSeat: (seat) => apiClient.post('/seats', seat),
+    updateSeat: (id, seat) => apiClient.put(`/seats/${id}`, seat),
+    deleteSeat: (id) => apiClient.delete(`/seats/${id}`),
+    updateSeatStatus: (id, status) => apiClient.patch(`/seats/${id}/status`, { status }),
+    createSeatsBulk: (data) => apiClient.post('/seats/bulk', data),
+    updateSeatsBulk: (data) => apiClient.put('/seats/bulk', data),
+    deleteSeatsBulk: (data) => apiClient.delete('/seats/bulk', { data }),
+};
+
+const bookingAPI = {
+    getBookings: (params = {}) => apiClient.get('/bookings', { params }),
+    getBookingById: (id, params = {}) => apiClient.get(`/bookings/${id}`, { params }),
+};
+
 const redeemAPI = {
     getRedeems: (params = {}) => apiClient.get('/redeems', { params }),
     getRedeemById: (id) => apiClient.get(`/redeems/${id}`),
@@ -134,6 +151,17 @@ const ticketPriceAPI = {
     deleteTicketPrice: (id) => apiClient.delete(`/ticket-prices/${id}`),
 };
 
+/* ─── Statistic (Admin Dashboard) ──────────────────────────── */
+const statisticAPI = {
+    getOverview: () => apiClient.get('/bookings/stats/overview'),
+    getRevenueByGenre: (params) => apiClient.get('/bookings/stats/revenue-by-genre', { params }),
+    getDailySales: (params) => apiClient.get('/bookings/stats/revenue-by-month', { params }),
+    getYearlyRevenue: (params) => apiClient.get('/bookings/stats/revenue-by-year', { params }),
+    getTheaterRevenueByYear: (params) => apiClient.get('/bookings/stats/revenue-by-theater', { params }),
+    exportDashboard: () => apiClient.get('/bookings/stats/export', { responseType: 'blob' }),
+};
+
+/* ─── Exports ───────────────────────────────────────────────── */
 export {
     authAPI,
     genreAPI,
@@ -143,9 +171,12 @@ export {
     movieAPI,
     showtimeAPI,
     screenAPI,
+    seatAPI,
+    bookingAPI,
     redeemAPI,
     redeemGiftAPI,
     promotionAPI,
     festivalAPI,
     ticketPriceAPI,
+    statisticAPI,
 };

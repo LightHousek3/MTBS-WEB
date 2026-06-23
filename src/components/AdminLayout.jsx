@@ -16,6 +16,7 @@ import {
     AccountBookOutlined,
     TrophyOutlined,
     DesktopOutlined,
+    ContainerOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -74,6 +75,18 @@ const AdminLayout = () => {
             icon: <FieldTimeOutlined />,
             label: 'Quản lý suất chiếu',
             onClick: () => navigate('/admin/showtimes'),
+        },
+        {
+            key: '/admin/bookings',
+            icon: <ContainerOutlined />,
+            label: 'Quản lý đặt vé',
+            onClick: () => navigate('/admin/bookings'),
+        },
+        {
+            key: '/admin/seats',
+            icon: <AppstoreOutlined />,
+            label: 'Quản lý ghế',
+            onClick: () => navigate('/admin/seats'),
         },
         {
             key: '/admin/redeems',

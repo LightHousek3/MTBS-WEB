@@ -1,3 +1,4 @@
+import Dashboard from './Dashboard';
 import GenreManagement from './GenreManagement';
 import TheaterManagement from './TheaterManagement';
 import ScreenManagement from './ScreenManagement';
@@ -8,8 +9,11 @@ import RedeemManagement from './RedeemManagement';
 import RedeemGiftManagement from './RedeemGiftManagement';
 import TicketPriceManagement from './TicketPriceManagement';
 import PromotionManagement from './PromotionManagement';
+import BookingManagement from './BookingManagement';
+import SeatManagement from './SeatManagement';
 
 export {
+    Dashboard,
     GenreManagement,
     TheaterManagement,
     ScreenManagement,
@@ -20,4 +24,6 @@ export {
     RedeemGiftManagement,
     TicketPriceManagement,
     PromotionManagement,
+    BookingManagement,
+    SeatManagement,
 };

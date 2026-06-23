@@ -3,6 +3,7 @@ import viVN from 'antd/locale/vi_VN';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { PublicRoute, ProtectedRoute, GlobalAuthListener, AdminLayout } from './components';
+import { Dashboard } from './pages/admin';
 import { NotFound, UnAuthorized } from './pages/error';
 import { Login } from './pages/auth';
 import {
@@ -16,6 +17,8 @@ import {
     TicketPriceManagement,
     PromotionManagement,
     ScreenManagement,
+    BookingManagement,
+    SeatManagement,
 } from './pages/admin';
 
 function App() {
@@ -48,7 +51,7 @@ function App() {
                                 element={<ProtectedRoute>{<AdminLayout />}</ProtectedRoute>}
                             >
                                 {/* Dashboard */}
-                                <Route index element={<NotFound />} />
+                                <Route index element={<Dashboard />} />
                                 <Route path="genres" element={<GenreManagement />} />
                                 <Route path="theaters" element={<TheaterManagement />} />
                                 <Route path="screens" element={<ScreenManagement />} />
@@ -59,6 +62,8 @@ function App() {
                                 <Route path="redeem-gifts" element={<RedeemGiftManagement />} />
                                 <Route path="ticket-prices" element={<TicketPriceManagement />} />
                                 <Route path="promotions" element={<PromotionManagement />} />
+                                <Route path="bookings" element={<BookingManagement />} />
+                                <Route path="seats" element={<SeatManagement />} />
                             </Route>
                             {/* Error pages */}
                             <Route path="/unauthorized" element={<UnAuthorized />} />

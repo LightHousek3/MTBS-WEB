@@ -58,6 +58,12 @@ const AdminLayout = () => {
             onClick: () => navigate('/admin/screens'),
         },
         {
+            key: '/admin/banners',
+            icon: <GiftOutlined />,
+            label: 'Quản lý banner',
+            onClick: () => navigate('/admin/banners'),
+        },
+        {
             key: '/admin/festivals',
             icon: <GiftOutlined />,
             label: 'Quản lý chương trình',

@@ -9,6 +9,7 @@ import RedeemGiftManagement from './RedeemGiftManagement';
 import TicketPriceManagement from './TicketPriceManagement';
 import PromotionManagement from './PromotionManagement';
 import FestivalManagement from './FestivalManagement';
+import BannerManagement from './BannerManagement';
 
 export {
     GenreManagement,
@@ -22,4 +23,5 @@ export {
     TicketPriceManagement,
     PromotionManagement,
     FestivalManagement,
+    BannerManagement,
 };

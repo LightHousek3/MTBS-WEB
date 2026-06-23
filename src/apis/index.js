@@ -90,6 +90,11 @@ const screenAPI = {
     getScreens: () => apiClient.get('/screens'),
 };
 
+const bookingAPI = {
+    getBookings: (params = {}) => apiClient.get('/bookings', { params }),
+    getBookingById: (id, params = {}) => apiClient.get(`/bookings/${id}`, { params }),
+};
+
 const redeemAPI = {
     getRedeems: (params = {}) => apiClient.get('/redeems', { params }),
     getRedeemById: (id) => apiClient.get(`/redeems/${id}`),
@@ -142,6 +147,7 @@ export {
     movieAPI,
     showtimeAPI,
     screenAPI,
+    bookingAPI,
     redeemAPI,
     redeemGiftAPI,
     promotionAPI,

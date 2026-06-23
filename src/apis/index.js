@@ -143,6 +143,22 @@ const festivalAPI = {
     deleteFestival: (id) => apiClient.delete(`/festivals/${id}`),
 };
 
+const bannerAPI = {
+    getBanners: (params = {}) => apiClient.get('/banners', { params }),
+    getBannerById: (id) => apiClient.get(`/banners/${id}`),
+    createBanner: (banner) => apiClient.post('/banners', banner),
+    updateBanner: (id, banner) => apiClient.put(`/banners/${id}`, banner),
+    deleteBanner: (id) => apiClient.delete(`/banners/${id}`),
+};
+
+const newsAPI = {
+    getNewsList: (params = {}) => apiClient.get('/news', { params }),
+    getNewsById: (id) => apiClient.get(`/news/${id}`),
+    createNews: (news) => apiClient.post('/news', news),
+    updateNews: (id, news) => apiClient.put(`/news/${id}`, news),
+    deleteNews: (id) => apiClient.delete(`/news/${id}`),
+};
+
 const ticketPriceAPI = {
     getTicketPrices: (params) => apiClient.get('/ticket-prices', { params }),
     getTicketPriceById: (id) => apiClient.get(`/ticket-prices/${id}`),
@@ -177,6 +193,8 @@ export {
     redeemGiftAPI,
     promotionAPI,
     festivalAPI,
+    bannerAPI,
+    newsAPI,
     ticketPriceAPI,
     statisticAPI,
 };

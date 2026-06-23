@@ -59,6 +59,18 @@ const AdminLayout = () => {
             onClick: () => navigate('/admin/screens'),
         },
         {
+            key: '/admin/banners',
+            icon: <GiftOutlined />,
+            label: 'Quản lý banner',
+            onClick: () => navigate('/admin/banners'),
+        },
+        {
+            key: '/admin/news',
+            icon: <AppstoreOutlined />,
+            label: 'Quản lý tin tức',
+            onClick: () => navigate('/admin/news'),
+        },
+        {
             key: '/admin/festivals',
             icon: <GiftOutlined />,
             label: 'Quản lý chương trình',

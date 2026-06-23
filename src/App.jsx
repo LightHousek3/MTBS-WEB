@@ -19,6 +19,7 @@ import {
     ScreenManagement,
     FestivalManagement,
     BannerManagement,
+    NewsManagement,
     BookingManagement,
     SeatManagement,
 } from './pages/admin';
@@ -58,6 +59,7 @@ function App() {
                                 <Route path="theaters" element={<TheaterManagement />} />
                                 <Route path="screens" element={<ScreenManagement />} />
                                 <Route path="banners" element={<BannerManagement />} />
+                                <Route path="news" element={<NewsManagement />} />
                                 <Route path="festivals" element={<FestivalManagement />} />
                                 <Route path="services" element={<ServiceManagement />} />
                                 <Route path="movies" element={<MovieManagement />} />

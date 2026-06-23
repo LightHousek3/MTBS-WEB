@@ -11,6 +11,7 @@ import TicketPriceManagement from './TicketPriceManagement';
 import PromotionManagement from './PromotionManagement';
 import FestivalManagement from './FestivalManagement';
 import BannerManagement from './BannerManagement';
+import NewsManagement from './NewsManagement';
 import BookingManagement from './BookingManagement';
 import SeatManagement from './SeatManagement';
 
@@ -28,6 +29,7 @@ export {
     PromotionManagement,
     FestivalManagement,
     BannerManagement,
+    NewsManagement,
     BookingManagement,
     SeatManagement,
 };

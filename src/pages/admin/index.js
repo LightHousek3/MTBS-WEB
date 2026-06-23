@@ -1,3 +1,4 @@
+import Dashboard from './Dashboard';
 import GenreManagement from './GenreManagement';
 import TheaterManagement from './TheaterManagement';
 import ScreenManagement from './ScreenManagement';
@@ -11,8 +12,11 @@ import PromotionManagement from './PromotionManagement';
 import FestivalManagement from './FestivalManagement';
 import BannerManagement from './BannerManagement';
 import NewsManagement from './NewsManagement';
+import BookingManagement from './BookingManagement';
+import SeatManagement from './SeatManagement';
 
 export {
+    Dashboard,
     GenreManagement,
     TheaterManagement,
     ScreenManagement,
@@ -26,4 +30,6 @@ export {
     FestivalManagement,
     BannerManagement,
     NewsManagement,
+    BookingManagement,
+    SeatManagement,
 };

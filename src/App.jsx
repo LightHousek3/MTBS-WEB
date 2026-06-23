@@ -17,6 +17,7 @@ import {
     TicketPriceManagement,
     PromotionManagement,
     BookingManagement,
+    SeatManagement,
 } from './pages/admin';
 
 function App() {
@@ -60,6 +61,7 @@ function App() {
                                 <Route path="ticket-prices" element={<TicketPriceManagement />} />
                                 <Route path="promotions" element={<PromotionManagement />} />
                                 <Route path="bookings" element={<BookingManagement />} />
+                                <Route path="seats" element={<SeatManagement />} />
                             </Route>
                             {/* Error pages */}
                             <Route path="/unauthorized" element={<UnAuthorized />} />

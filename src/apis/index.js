@@ -90,6 +90,11 @@ const screenAPI = {
     getScreens: () => apiClient.get('/screens'),
 };
 
+const bookingAPI = {
+    getBookings: (params = {}) => apiClient.get('/bookings', { params }),
+    getBookingById: (id, params = {}) => apiClient.get(`/bookings/${id}`, { params }),
+};
+
 const redeemAPI = {
     getRedeems: (params = {}) => apiClient.get('/redeems', { params }),
     getRedeemById: (id) => apiClient.get(`/redeems/${id}`),
@@ -122,6 +127,17 @@ const ticketPriceAPI = {
     deleteTicketPrice: (id) => apiClient.delete(`/ticket-prices/${id}`),
 };
 
+/* ─── Statistic (Admin Dashboard) ──────────────────────────── */
+const statisticAPI = {
+    getOverview: () => apiClient.get('/bookings/stats/overview'),
+    getRevenueByGenre: (params) => apiClient.get('/bookings/stats/revenue-by-genre', { params }),
+    getDailySales: (params) => apiClient.get('/bookings/stats/revenue-by-month', { params }),
+    getYearlyRevenue: (params) => apiClient.get('/bookings/stats/revenue-by-year', { params }),
+    getTheaterRevenueByYear: (params) => apiClient.get('/bookings/stats/revenue-by-theater', { params }),
+    exportDashboard: () => apiClient.get('/bookings/stats/export', { responseType: 'blob' }),
+};
+
+/* ─── Exports ───────────────────────────────────────────────── */
 export {
     authAPI,
     genreAPI,
@@ -131,8 +147,10 @@ export {
     movieAPI,
     showtimeAPI,
     screenAPI,
+    bookingAPI,
     redeemAPI,
     redeemGiftAPI,
     promotionAPI,
     ticketPriceAPI,
+    statisticAPI,
 };

@@ -135,6 +135,14 @@ const promotionAPI = {
     deletePromotion: (id) => apiClient.delete(`/promotions/${id}`),
 };
 
+const festivalAPI = {
+    getFestivals: (params = {}) => apiClient.get('/festivals', { params }),
+    getFestivalById: (id) => apiClient.get(`/festivals/${id}`),
+    createFestival: (festival) => apiClient.post('/festivals', festival),
+    updateFestival: (id, festival) => apiClient.put(`/festivals/${id}`, festival),
+    deleteFestival: (id) => apiClient.delete(`/festivals/${id}`),
+};
+
 const ticketPriceAPI = {
     getTicketPrices: (params) => apiClient.get('/ticket-prices', { params }),
     getTicketPriceById: (id) => apiClient.get(`/ticket-prices/${id}`),
@@ -168,6 +176,7 @@ export {
     redeemAPI,
     redeemGiftAPI,
     promotionAPI,
+    festivalAPI,
     ticketPriceAPI,
     statisticAPI,
 };

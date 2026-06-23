@@ -17,6 +17,7 @@ import {
     TicketPriceManagement,
     PromotionManagement,
     ScreenManagement,
+    FestivalManagement,
     BookingManagement,
     SeatManagement,
 } from './pages/admin';
@@ -55,6 +56,7 @@ function App() {
                                 <Route path="genres" element={<GenreManagement />} />
                                 <Route path="theaters" element={<TheaterManagement />} />
                                 <Route path="screens" element={<ScreenManagement />} />
+                                <Route path="festivals" element={<FestivalManagement />} />
                                 <Route path="services" element={<ServiceManagement />} />
                                 <Route path="movies" element={<MovieManagement />} />
                                 <Route path="showtimes" element={<ShowtimeManagement />} />

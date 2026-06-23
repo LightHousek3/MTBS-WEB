@@ -206,6 +206,7 @@ const RedeemGiftManagement = () => {
       "Số lượng",
       "Địa chỉ giao hàng",
       "Ngày dự kiến giao",
+      "Ngày đã giao",
       "Ngày tạo",
     ];
     const rows = items.map((item) => [
@@ -217,6 +218,7 @@ const RedeemGiftManagement = () => {
       item.amount,
       item.address || "",
       formatDate(item.expectedDeliveryDate, "dd/MM/yyyy"),
+      formatDate(item.deliveredAt, "HH:mm dd/MM/yyyy"),
       formatDate(item.createdAt, "HH:mm dd/MM/yyyy"),
     ]);
     const tableHtml = [headers, ...rows]
@@ -336,6 +338,13 @@ const RedeemGiftManagement = () => {
       key: "expectedDeliveryDate",
       width: 130,
       render: (value) => formatDate(value, "dd/MM/yyyy") || "-",
+    },
+    {
+      title: "Ngày giao",
+      dataIndex: "deliveredAt",
+      key: "deliveredAt",
+      width: 150,
+      render: (value) => formatDate(value, "HH:mm dd/MM/yyyy") || "-",
     },
     {
       title: "Trạng thái",
@@ -515,6 +524,9 @@ const RedeemGiftManagement = () => {
             </Descriptions.Item>
             <Descriptions.Item label="Dự kiến giao">
               {formatDate(viewingRedeemGift.expectedDeliveryDate, "dd/MM/yyyy") || "-"}
+            </Descriptions.Item>
+            <Descriptions.Item label="Ngày đã giao">
+              {formatDate(viewingRedeemGift.deliveredAt, "HH:mm dd/MM/yyyy") || "-"}
             </Descriptions.Item>
             <Descriptions.Item label="Địa chỉ giao hàng" span={2}>
               {viewingRedeemGift.address || "-"}

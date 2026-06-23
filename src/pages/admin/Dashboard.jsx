@@ -1,6 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Row, Col, Card, Spin, message, Alert, Typography, Divider, Button } from 'antd';
-import { InboxOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { 
+  InboxOutlined, 
+  FileExcelOutlined,
+  ShoppingCartOutlined,
+  DollarCircleOutlined,
+  TagsOutlined,
+  PayCircleOutlined,
+  ShopOutlined,
+  VideoCameraOutlined
+} from '@ant-design/icons';
 import { statisticAPI } from '../../apis';
 import { Chart as ChartJS } from 'chart.js/auto';
 import { Line, Bar, Pie } from 'react-chartjs-2';
@@ -10,12 +19,12 @@ const { Title, Text } = Typography;
 
 /* ─── Stat card config ───────────────────────────────────────── */
 const STATS = [
-  { key: 'totalBookings', label: 'Tổng đặt chỗ', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: 'đơn' },
-  { key: 'totalRevenue', label: 'Doanh thu', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: '₫' },
-  { key: 'totalTickets', label: 'Vé đã bán', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: 'vé' },
-  { key: 'averageBookingValue', label: 'Giá trị TB / Đơn', format: (v) => Math.round(Number(v)).toLocaleString('vi-VN'), suffix: '₫' },
-  { key: 'totalTheaters', label: 'Số rạp', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: 'rạp' },
-  { key: 'totalMovies', label: 'Số phim', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: 'phim' },
+  { key: 'totalBookings', label: 'Tổng đặt chỗ', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: 'đơn', icon: <ShoppingCartOutlined />, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { key: 'totalRevenue', label: 'Doanh thu', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: '₫', icon: <DollarCircleOutlined />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { key: 'totalTickets', label: 'Ghế đã bán', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: 'ghế', icon: <TagsOutlined />, color: 'text-orange-600', bg: 'bg-orange-50' },
+  { key: 'averageBookingValue', label: 'Giá trị TB / Đơn', format: (v) => Math.round(Number(v)).toLocaleString('vi-VN'), suffix: '₫', icon: <PayCircleOutlined />, color: 'text-purple-600', bg: 'bg-purple-50' },
+  { key: 'totalTheaters', label: 'Số rạp', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: 'rạp', icon: <ShopOutlined />, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  { key: 'totalMovies', label: 'Số phim', format: (v) => Number(v).toLocaleString('vi-VN'), suffix: 'phim', icon: <VideoCameraOutlined />, color: 'text-rose-600', bg: 'bg-rose-50' },
 ];
 
 /* ─── Shared chart options ───────────────────────────────────── */
@@ -246,18 +255,29 @@ const Dashboard = () => {
 
         {/* Stat cards */}
         {overview && (
-          <Row gutter={[14, 14]} className="mb-6">
+          <Row gutter={[16, 16]} className="mb-6">
             {STATS.map((s) => (
               <Col key={s.key} xs={24} sm={12} md={8} lg={4}>
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">
-                    {s.label}
-                  </p>
-                  <p className="text-2xl font-bold text-gray-800 leading-tight">
-                    {s.format(overview[s.key] ?? 0)}
-                  </p>
-                  <Divider className="my-2" />
-                  <span className="text-xs text-gray-300">{s.suffix}</span>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 p-5 group relative overflow-hidden">
+                  <div className={`absolute -right-4 -top-4 w-20 h-20 rounded-full opacity-20 transition-transform duration-500 group-hover:scale-[2.5] ${s.bg}`}></div>
+                  
+                  <div className="flex items-center gap-3 mb-4 relative z-10">
+                    <div className={`p-2.5 rounded-xl ${s.bg} ${s.color} transition-transform duration-300 group-hover:-translate-y-1`}>
+                      <span className="text-xl flex">{s.icon}</span>
+                    </div>
+                    <p className="text-sm font-semibold text-gray-600">
+                      {s.label}
+                    </p>
+                  </div>
+                  
+                  <div className="relative z-10 flex items-baseline justify-between">
+                    <h3 className="text-2xl font-bold text-gray-800 tracking-tight">
+                      {s.format(overview[s.key] ?? 0)}
+                    </h3>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${s.bg} ${s.color}`}>
+                      {s.suffix}
+                    </span>
+                  </div>
                 </div>
               </Col>
             ))}

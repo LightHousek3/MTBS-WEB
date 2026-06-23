@@ -87,7 +87,11 @@ const showtimeAPI = {
 };
 
 const screenAPI = {
-    getScreens: () => apiClient.get('/screens'),
+    getScreens: (params = {}) => apiClient.get('/screens', { params }),
+    getScreenById: (id) => apiClient.get(`/screens/${id}`),
+    createScreen: (data) => apiClient.post('/screens', data),
+    updateScreen: (id, data) => apiClient.put(`/screens/${id}`, data),
+    deleteScreen: (id) => apiClient.delete(`/screens/${id}`),
 };
 
 const seatAPI = {

@@ -15,6 +15,7 @@ import {
     CoffeeOutlined,
     AccountBookOutlined,
     TrophyOutlined,
+    DesktopOutlined,
     ContainerOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
@@ -50,6 +51,12 @@ const AdminLayout = () => {
             icon: <ShopOutlined />,
             label: 'Quản lý rạp',
             onClick: () => navigate('/admin/theaters'),
+        },
+        {
+            key: '/admin/screens',
+            icon: <DesktopOutlined />,
+            label: 'Quản lý phòng chiếu',
+            onClick: () => navigate('/admin/screens'),
         },
         {
             key: '/admin/services',

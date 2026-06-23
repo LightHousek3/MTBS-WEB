@@ -15,6 +15,7 @@ import {
     TheaterManagement,
     TicketPriceManagement,
     PromotionManagement,
+    ScreenManagement,
 } from './pages/admin';
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
                                 <Route index element={<NotFound />} />
                                 <Route path="genres" element={<GenreManagement />} />
                                 <Route path="theaters" element={<TheaterManagement />} />
+                                <Route path="screens" element={<ScreenManagement />} />
                                 <Route path="services" element={<ServiceManagement />} />
                                 <Route path="movies" element={<MovieManagement />} />
                                 <Route path="showtimes" element={<ShowtimeManagement />} />

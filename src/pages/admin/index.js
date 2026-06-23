@@ -9,6 +9,7 @@ import RedeemGiftManagement from './RedeemGiftManagement';
 import TicketPriceManagement from './TicketPriceManagement';
 import PromotionManagement from './PromotionManagement';
 import BookingManagement from './BookingManagement';
+import SeatManagement from './SeatManagement';
 
 export {
     Dashboard,
@@ -22,4 +23,5 @@ export {
     TicketPriceManagement,
     PromotionManagement,
     BookingManagement,
+    SeatManagement,
 };

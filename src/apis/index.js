@@ -90,6 +90,18 @@ const screenAPI = {
     getScreens: () => apiClient.get('/screens'),
 };
 
+const seatAPI = {
+    getSeats: (params = {}) => apiClient.get('/seats', { params }),
+    getSeatById: (id) => apiClient.get(`/seats/${id}`),
+    createSeat: (seat) => apiClient.post('/seats', seat),
+    updateSeat: (id, seat) => apiClient.put(`/seats/${id}`, seat),
+    deleteSeat: (id) => apiClient.delete(`/seats/${id}`),
+    updateSeatStatus: (id, status) => apiClient.patch(`/seats/${id}/status`, { status }),
+    createSeatsBulk: (data) => apiClient.post('/seats/bulk', data),
+    updateSeatsBulk: (data) => apiClient.put('/seats/bulk', data),
+    deleteSeatsBulk: (data) => apiClient.delete('/seats/bulk', { data }),
+};
+
 const bookingAPI = {
     getBookings: (params = {}) => apiClient.get('/bookings', { params }),
     getBookingById: (id, params = {}) => apiClient.get(`/bookings/${id}`, { params }),
@@ -147,6 +159,7 @@ export {
     movieAPI,
     showtimeAPI,
     screenAPI,
+    seatAPI,
     bookingAPI,
     redeemAPI,
     redeemGiftAPI,

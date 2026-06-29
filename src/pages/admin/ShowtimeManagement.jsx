@@ -46,6 +46,19 @@ const getScreenName = (showtime) => showtime.screen?.name || "-";
 const getTheaterName = (showtime) => showtime.screen?.theater?.name || "-";
 const getScreenTheaterName = (screen) => screen.theater?.name || "Chưa có rạp";
 
+const mergeShowtimeDetail = (detail, record) => {
+  const detailShowtime = detail?.showtime || {};
+
+  return {
+    ...detail,
+    showtime: {
+      ...detailShowtime,
+      startTime: detailShowtime.startTime || record.startTime,
+      endTime: detailShowtime.endTime || record.endTime,
+    },
+  };
+};
+
 const normalizeShowtimeForCompare = (values) => ({
   movie: values.movie,
   screen: values.screen,
@@ -245,7 +258,7 @@ const ShowtimeManagement = () => {
       setDetailLoading(true);
       setSeatingDetail(null);
       const response = await showtimeAPI.getShowtimeSeating(record.id);
-      setSeatingDetail(response.data.data);
+      setSeatingDetail(mergeShowtimeDetail(response.data.data, record));
     } catch (error) {
       message.error(error.response?.data?.message || "Không thể tải chi tiết suất chiếu.");
       console.error(error);

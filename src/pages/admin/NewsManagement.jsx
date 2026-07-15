@@ -11,13 +11,16 @@ import {
     Popconfirm,
     App,
     Descriptions,
+    Upload,
 } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined, EyeOutlined } from '@ant-design/icons';
-import { newsAPI } from '../../apis';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
+import { newsAPI, cloudinaryAPI } from '../../apis';
 import { hasFormChanged, formatDate } from '../../utils/';
 
 const { Title, Text } = Typography;
 const { Search, TextArea } = Input;
+
+const getNewsImageUrl = (news) => news?.image || news?.imageUrl || '';
 
 const NewsManagement = () => {
     const [newsItems, setNewsItems] = useState([]);
@@ -28,9 +31,29 @@ const NewsManagement = () => {
     const [viewingNews, setViewingNews] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [originalNewsData, setOriginalNewsData] = useState(null);
+    const [imageFile, setImageFile] = useState(null);
+    const [imageList, setImageList] = useState([]);
+    const [previewImage, setPreviewImage] = useState('');
+    const [imageUploadProgress, setImageUploadProgress] = useState(0);
+    const [uploadedImageAsset, setUploadedImageAsset] = useState(null);
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     const { message } = App.useApp();
+
+    const mapNewsToFormValues = (news) => ({
+        title: news.title || '',
+        imageUrl: getNewsImageUrl(news),
+        content: news.content || '',
+    });
+
+    const buildNewsPayload = (values, imageUrl) => {
+        const { imageUrl: formImageUrl, ...restValues } = values;
+
+        return {
+            ...restValues,
+            image: imageUrl || formImageUrl?.trim() || '',
+        };
+    };
 
     const fetchNews = async (page = 1, limit = 5, search = '') => {
         try {
@@ -81,9 +104,26 @@ const NewsManagement = () => {
     };
 
     const handleEdit = (news) => {
+        const existingImageUrl = getNewsImageUrl(news);
         setEditingNews(news);
         setOriginalNewsData(news);
-        form.setFieldsValue(news);
+        form.setFieldsValue(mapNewsToFormValues(news));
+        setImageFile(null);
+        setImageUploadProgress(0);
+        setUploadedImageAsset(existingImageUrl ? { url: existingImageUrl } : null);
+        setPreviewImage(existingImageUrl);
+        setImageList(
+            existingImageUrl
+                ? [
+                      {
+                          uid: '-1',
+                          name: 'news-image',
+                          status: 'done',
+                          url: existingImageUrl,
+                      },
+                  ]
+                : [],
+        );
         setIsModalVisible(true);
     };
 
@@ -105,16 +145,32 @@ const NewsManagement = () => {
         setEditingNews(null);
         setOriginalNewsData(null);
         form.resetFields();
+        setImageFile(null);
+        setImageList([]);
+        setPreviewImage('');
+        setImageUploadProgress(0);
+        setUploadedImageAsset(null);
         setIsModalVisible(true);
     };
 
     const handleAddNews = async (values) => {
         try {
             setLoading(true);
-            await newsAPI.createNews(values);
+            if (!imageFile && !uploadedImageAsset && !values.imageUrl?.trim()) {
+                throw new Error('Vui lòng chọn ảnh tin tức hoặc dán URL ảnh');
+            }
+
+            let imageUrl = uploadedImageAsset?.url;
+            if (imageFile) {
+                const response = await cloudinaryAPI.uploadImage(imageFile, 'news', setImageUploadProgress);
+                imageUrl = response.data.secure_url;
+                setUploadedImageAsset({ url: imageUrl, publicId: response.data.public_id });
+            }
+
+            await newsAPI.createNews(buildNewsPayload(values, imageUrl));
             message.success('Thêm tin tức thành công');
         } catch (error) {
-            message.error('Lỗi không thể thêm tin tức!');
+            message.error(error.message || 'Lỗi không thể thêm tin tức!');
             console.error(error.response?.data?.message || error.message);
         } finally {
             setLoading(false);
@@ -124,10 +180,16 @@ const NewsManagement = () => {
     const handleUpdateNews = async (values) => {
         try {
             setLoading(true);
-            await newsAPI.updateNews(editingNews.id, values);
+            let imageUrl = uploadedImageAsset?.url;
+            if (imageFile) {
+                const response = await cloudinaryAPI.uploadImage(imageFile, 'news', setImageUploadProgress);
+                imageUrl = response.data.secure_url;
+                setUploadedImageAsset({ url: imageUrl, publicId: response.data.public_id });
+            }
+            await newsAPI.updateNews(editingNews.id, buildNewsPayload(values, imageUrl));
             message.success('Cập nhật tin tức thành công');
         } catch (error) {
-            message.error('Lỗi không thể cập nhật tin tức!');
+            message.error(error.message || 'Lỗi không thể cập nhật tin tức!');
             console.error(error.response?.data?.message || error.message);
         } finally {
             setLoading(false);
@@ -165,7 +227,13 @@ const NewsManagement = () => {
             title: 'Ảnh',
             dataIndex: 'image',
             key: 'image',
-            render: (img) => <img src={img} alt="news" style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 8 }} />,
+            render: (img, record) => (
+                <img
+                    src={img || record?.imageUrl || record?.image || 'https://placehold.co/80x60?text=No+Image'}
+                    alt="news"
+                    style={{ width: 80, height: 60, objectFit: 'cover', borderRadius: 8 }}
+                />
+            ),
             width: 120,
         },
         {
@@ -259,15 +327,66 @@ const NewsManagement = () => {
                     >
                         <Input placeholder="Nhập tiêu đề tin tức" />
                     </Form.Item>
-                    <Form.Item
-                        name="image"
-                        label="URL ảnh"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập URL ảnh!' },
-                            { type: 'url', message: 'URL ảnh không hợp lệ!' },
-                        ]}
-                    >
-                        <Input placeholder="Nhập URL ảnh tin tức" />
+                    <Form.Item name="imageUrl" label="Hoặc dán URL ảnh" rules={[{ type: 'url', message: 'URL ảnh không hợp lệ!' }]}>
+                        <Input placeholder="Ví dụ: https://images.unsplash.com/...." />
+                    </Form.Item>
+                    <Form.Item label="Ảnh tin tức">
+                        <Upload
+                            accept="image/*"
+                            maxCount={1}
+                            listType="picture"
+                            showUploadList={false}
+                            disabled={loading}
+                            fileList={imageList}
+                            beforeUpload={(file) => {
+                                if (loading) return Upload.LIST_IGNORE;
+                                setImageFile(file);
+                                setImageUploadProgress(0);
+                                setUploadedImageAsset(null);
+                                const preview = URL.createObjectURL(file);
+                                setPreviewImage(preview);
+                                setImageList([
+                                    {
+                                        uid: file.uid,
+                                        name: file.name,
+                                        status: 'done',
+                                        url: preview,
+                                    },
+                                ]);
+                                return false;
+                            }}
+                            onRemove={() => {
+                                if (loading) return false;
+                                setImageFile(null);
+                                setImageUploadProgress(0);
+                                setUploadedImageAsset(null);
+                                setImageList([]);
+                                setPreviewImage('');
+                                return true;
+                            }}
+                        >
+                            <Button icon={<UploadOutlined />}>
+                                {imageList.length > 0 ? 'Chọn lại ảnh' : 'Chọn ảnh từ máy'}
+                            </Button>
+                        </Upload>
+                        <div style={{ marginTop: 8 }}>
+                            <small>Chọn ảnh tin tức từ máy để upload trực tiếp.</small>
+                        </div>
+                        {imageUploadProgress > 0 && imageUploadProgress < 100 && (
+                            <div style={{ marginTop: 8 }}>
+                                Đang upload: {imageUploadProgress}%
+                            </div>
+                        )}
+                        {previewImage && (
+                            <div style={{ marginTop: 16 }}>
+                                <img
+                                    src={previewImage}
+                                    alt="preview"
+                                    width={280}
+                                    style={{ borderRadius: 12, objectFit: 'cover' }}
+                                />
+                            </div>
+                        )}
                     </Form.Item>
                     <Form.Item
                         name="content"
@@ -298,7 +417,7 @@ const NewsManagement = () => {
                         </Descriptions.Item>
                         <Descriptions.Item label="Ảnh" span={2}>
                             <img
-                                src={viewingNews.image}
+                                src={viewingNews.image || viewingNews.imageUrl || 'https://placehold.co/240x160?text=No+Image'}
                                 alt={viewingNews.title}
                                 style={{ width: '100%', maxHeight: 240, objectFit: 'cover', borderRadius: 12 }}
                             />

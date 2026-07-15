@@ -14,6 +14,7 @@ import {
     Space,
     Table,
     Typography,
+    Upload,
 } from 'antd';
 import {
     EditOutlined,
@@ -21,12 +22,15 @@ import {
     PlusOutlined,
     SearchOutlined,
     EyeOutlined,
+    UploadOutlined,
 } from '@ant-design/icons';
-import { festivalAPI } from '../../apis';
+import { festivalAPI, cloudinaryAPI } from '../../apis';
 import { formatDate, hasFormChanged } from '../../utils';
 
 const { Title, Text } = Typography;
 const { Search, TextArea } = Input;
+
+const getFestivalImageUrl = (festival) => festival?.image || festival?.imageUrl || '';
 
 const FestivalManagement = () => {
     const [festivals, setFestivals] = useState([]);
@@ -37,13 +41,25 @@ const FestivalManagement = () => {
     const [viewingFestival, setViewingFestival] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [originalFestivalData, setOriginalFestivalData] = useState(null);
+    const [imageFile, setImageFile] = useState(null);
+    const [imageList, setImageList] = useState([]);
+    const [previewImage, setPreviewImage] = useState('');
+    const [imageUploadProgress, setImageUploadProgress] = useState(0);
+    const [uploadedImageAsset, setUploadedImageAsset] = useState(null);
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     const { message } = App.useApp();
 
+    const hasDuplicateFestivalTitle = (title, ignoreId = null) => {
+        const normalizedTitle = title?.trim().toLowerCase();
+        if (!normalizedTitle) return false;
+
+        return festivals.some((festival) => festival.id !== ignoreId && (festival.title || '').trim().toLowerCase() === normalizedTitle);
+    };
+
     const normalizeFestivalData = (festival) => ({
         title: festival.title || '',
-        image: festival.image || '',
+        image: getFestivalImageUrl(festival),
         content: festival.content || '',
         startTime: festival.startTime ? dayjs(festival.startTime).toISOString() : '',
         endTime: festival.endTime ? dayjs(festival.endTime).toISOString() : '',
@@ -51,19 +67,35 @@ const FestivalManagement = () => {
 
     const mapFestivalToFormValues = (festival) => ({
         title: festival.title || '',
-        image: festival.image || '',
+        imageUrl: getFestivalImageUrl(festival),
         content: festival.content || '',
         startTime: festival.startTime ? dayjs(festival.startTime) : null,
         endTime: festival.endTime ? dayjs(festival.endTime) : null,
     });
 
-    const buildPayload = (values) => ({
+    const buildPayload = (values, imageUrl) => ({
         title: values.title?.trim(),
-        image: values.image?.trim(),
+        image: imageUrl || values.imageUrl?.trim() || uploadedImageAsset?.url || '',
         content: values.content?.trim(),
         startTime: values.startTime?.toISOString(),
         endTime: values.endTime?.toISOString(),
     });
+
+    const uploadFestivalImage = async (file, onProgress) => {
+        const response = await cloudinaryAPI.uploadImage(file, 'festivals', onProgress);
+        return {
+            url: response.data.secure_url,
+            publicId: response.data.public_id,
+        };
+    };
+
+    const resetImageState = () => {
+        setImageFile(null);
+        setImageList([]);
+        setPreviewImage('');
+        setImageUploadProgress(0);
+        setUploadedImageAsset(null);
+    };
 
     const fetchFestivals = async (page = 1, limit = 5, search = '') => {
         try {
@@ -118,6 +150,23 @@ const FestivalManagement = () => {
         setEditingFestival(festival);
         setOriginalFestivalData(normalized);
         form.setFieldsValue(mapFestivalToFormValues(festival));
+        const existingImageUrl = getFestivalImageUrl(festival);
+        setImageFile(null);
+        setImageUploadProgress(0);
+        setUploadedImageAsset(existingImageUrl ? { url: existingImageUrl } : null);
+        setPreviewImage(existingImageUrl);
+        setImageList(
+            existingImageUrl
+                ? [
+                      {
+                          uid: '-1',
+                          name: 'festival-image',
+                          status: 'done',
+                          url: existingImageUrl,
+                      },
+                  ]
+                : [],
+        );
         setIsModalVisible(true);
     };
 
@@ -139,18 +188,37 @@ const FestivalManagement = () => {
         setEditingFestival(null);
         setOriginalFestivalData(null);
         form.resetFields();
+        resetImageState();
         setIsModalVisible(true);
     };
 
     const handleAddFestival = async (values) => {
         try {
             setLoading(true);
-            const payload = buildPayload(values);
+            if (!imageFile && !uploadedImageAsset && !values.imageUrl?.trim()) {
+                throw new Error('Vui lòng chọn ảnh chương trình hoặc dán URL ảnh');
+            }
+
+            const normalizedTitle = values.title?.trim();
+            if (hasDuplicateFestivalTitle(normalizedTitle)) {
+                message.error('Tiêu đề chương trình đã tồn tại. Vui lòng đổi tên khác.');
+                return false;
+            }
+
+            let imageAsset = uploadedImageAsset;
+            if (imageFile) {
+                imageAsset = await uploadFestivalImage(imageFile, setImageUploadProgress);
+                setUploadedImageAsset(imageAsset);
+            }
+
+            const payload = buildPayload(values, imageAsset?.url);
             await festivalAPI.createFestival(payload);
             message.success('Thêm chương trình thành công');
+            return true;
         } catch (error) {
-            message.error('Lỗi không thể thêm chương trình!');
+            message.error(error.message || 'Lỗi không thể thêm chương trình!');
             console.error(error.response?.data?.message || error.message);
+            return false;
         } finally {
             setLoading(false);
         }
@@ -159,12 +227,26 @@ const FestivalManagement = () => {
     const handleUpdateFestival = async (values) => {
         try {
             setLoading(true);
-            const payload = buildPayload(values);
+            const normalizedTitle = values.title?.trim();
+            if (hasDuplicateFestivalTitle(normalizedTitle, editingFestival?.id)) {
+                message.error('Tiêu đề chương trình đã tồn tại. Vui lòng đổi tên khác.');
+                return false;
+            }
+
+            let imageAsset = uploadedImageAsset;
+            if (imageFile) {
+                imageAsset = await uploadFestivalImage(imageFile, setImageUploadProgress);
+                setUploadedImageAsset(imageAsset);
+            }
+
+            const payload = buildPayload(values, imageAsset?.url);
             await festivalAPI.updateFestival(editingFestival.id, payload);
             message.success('Cập nhật chương trình thành công');
+            return true;
         } catch (error) {
-            message.error('Lỗi không thể cập nhật chương trình!');
+            message.error(error.message || 'Lỗi không thể cập nhật chương trình!');
             console.error(error.response?.data?.message || error.message);
+            return false;
         } finally {
             setLoading(false);
         }
@@ -172,16 +254,14 @@ const FestivalManagement = () => {
 
     const handleModalOk = () => {
         form.validateFields().then(async (values) => {
-            const payload = buildPayload(values);
-            if (editingFestival && !hasFormChanged(originalFestivalData, normalizeFestivalData(payload))) {
+            if (editingFestival && !hasFormChanged(originalFestivalData, normalizeFestivalData(values)) && !imageFile) {
                 message.warning('Không có thay đổi nào để cập nhật!');
                 return;
             }
 
-            if (editingFestival) {
-                await handleUpdateFestival(values);
-            } else {
-                await handleAddFestival(values);
+            const success = editingFestival ? await handleUpdateFestival(values) : await handleAddFestival(values);
+            if (!success) {
+                return;
             }
 
             setIsModalVisible(false);
@@ -196,9 +276,9 @@ const FestivalManagement = () => {
             title: 'Ảnh',
             dataIndex: 'image',
             key: 'image',
-            render: (img) => (
+            render: (img, record) => (
                 <Image
-                    src={img || 'https://placehold.co/70x70?text=No+Image'}
+                    src={img || record?.imageUrl || record?.image || 'https://placehold.co/70x70?text=No+Image'}
                     alt="festival"
                     width={70}
                     preview={false}
@@ -326,15 +406,67 @@ const FestivalManagement = () => {
                         <Input placeholder="Nhập tiêu đề sự kiện" />
                     </Form.Item>
 
-                    <Form.Item
-                        name="image"
-                        label="URL ảnh"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập URL ảnh!' },
-                            { type: 'url', message: 'URL ảnh không hợp lệ!' },
-                        ]}
-                    >
-                        <Input placeholder="Nhập URL ảnh" />
+                    <Form.Item name="imageUrl" label="Hoặc dán URL ảnh" rules={[{ type: 'url', message: 'URL ảnh không hợp lệ!' }]}>
+                        <Input placeholder="Ví dụ: https://images.unsplash.com/...." />
+                    </Form.Item>
+
+                    <Form.Item label="Ảnh chương trình">
+                        <Upload
+                            accept="image/*"
+                            maxCount={1}
+                            listType="picture"
+                            showUploadList={false}
+                            disabled={loading}
+                            fileList={imageList}
+                            beforeUpload={(file) => {
+                                if (loading) return Upload.LIST_IGNORE;
+                                setImageFile(file);
+                                setImageUploadProgress(0);
+                                setUploadedImageAsset(null);
+                                const preview = URL.createObjectURL(file);
+                                setPreviewImage(preview);
+                                setImageList([
+                                    {
+                                        uid: file.uid,
+                                        name: file.name,
+                                        status: 'done',
+                                        url: preview,
+                                    },
+                                ]);
+                                return false;
+                            }}
+                            onRemove={() => {
+                                if (loading) return false;
+                                setImageFile(null);
+                                setImageUploadProgress(0);
+                                setUploadedImageAsset(null);
+                                setImageList([]);
+                                setPreviewImage('');
+                                return true;
+                            }}
+                        >
+                            <Button icon={<UploadOutlined />}>
+                                {imageList.length > 0 ? 'Chọn lại ảnh' : 'Chọn ảnh từ máy'}
+                            </Button>
+                        </Upload>
+                        <div style={{ marginTop: 8 }}>
+                            <small>Chọn ảnh chương trình từ máy để upload lên Cloudinary.</small>
+                        </div>
+                        {imageUploadProgress > 0 && imageUploadProgress < 100 && (
+                            <div style={{ marginTop: 8 }}>
+                                Đang upload: {imageUploadProgress}%
+                            </div>
+                        )}
+                        {previewImage && (
+                            <div style={{ marginTop: 16 }}>
+                                <img
+                                    src={previewImage}
+                                    alt="preview"
+                                    width={280}
+                                    style={{ borderRadius: 12, objectFit: 'cover' }}
+                                />
+                            </div>
+                        )}
                     </Form.Item>
 
                     <Form.Item
@@ -356,7 +488,24 @@ const FestivalManagement = () => {
                     <Form.Item
                         name="endTime"
                         label="Thời gian kết thúc"
-                        rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc!' }]}
+                        dependencies={['startTime']}
+                        rules={[
+                            { required: true, message: 'Vui lòng chọn thời gian kết thúc!' },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                    const startTime = getFieldValue('startTime');
+                                    if (!value || !startTime) {
+                                        return Promise.resolve();
+                                    }
+
+                                    if (dayjs(value).isAfter(dayjs(startTime))) {
+                                        return Promise.resolve();
+                                    }
+
+                                    return Promise.reject(new Error('Thời gian kết thúc phải sau thời gian bắt đầu'));
+                                },
+                            }),
+                        ]}
                     >
                         <DatePicker showTime className="w-full" format="HH:mm DD/MM/YYYY" />
                     </Form.Item>
@@ -384,7 +533,7 @@ const FestivalManagement = () => {
 
                             <Descriptions.Item label="Ảnh" span={2}>
                                 <Image
-                                    src={viewingFestival.image}
+                                    src={viewingFestival.image || viewingFestival.imageUrl || 'https://placehold.co/120x120?text=No+Image'}
                                     alt={viewingFestival.title}
                                     width={120}
                                     height={120}

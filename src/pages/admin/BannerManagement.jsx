@@ -14,9 +14,10 @@ import {
     Table,
     Tag,
     Typography,
+    Upload,
 } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined, EyeOutlined } from '@ant-design/icons';
-import { bannerAPI } from '../../apis';
+import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
+import { bannerAPI, cloudinaryAPI } from '../../apis';
 import { formatDate, hasFormChanged } from '../../utils';
 
 const { Title, Text } = Typography;
@@ -37,6 +38,11 @@ const BannerManagement = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [originalBannerData, setOriginalBannerData] = useState(null);
+    const [bannerFile, setBannerFile] = useState(null);
+    const [bannerList, setBannerList] = useState([]);
+    const [previewBanner, setPreviewBanner] = useState('');
+    const [bannerUploadProgress, setBannerUploadProgress] = useState(0);
+    const [uploadedBannerAsset, setUploadedBannerAsset] = useState(null);
     const [loading, setLoading] = useState(false);
     const [form] = Form.useForm();
     const { message } = App.useApp();
@@ -46,13 +52,33 @@ const BannerManagement = () => {
 
     const normalizeBannerData = (banner) => ({
         type: banner.type || '',
-        url: banner.url || '',
     });
 
     const buildPayload = (values) => ({
         type: values.type,
-        url: values.url?.trim(),
     });
+
+    const uploadBannerAsset = async (file, type, onProgress) => {
+        const resourceType = type === 'VIDEO' ? 'video' : 'image';
+        const response = await cloudinaryAPI.upload(file, {
+            resourceType,
+            folder: 'banners',
+            onProgress,
+        });
+
+        return {
+            url: response.data.secure_url,
+            publicId: response.data.public_id,
+        };
+    };
+
+    const resetBannerState = () => {
+        setBannerFile(null);
+        setBannerList([]);
+        setPreviewBanner('');
+        setBannerUploadProgress(0);
+        setUploadedBannerAsset(null);
+    };
 
     const fetchBanners = async (page = 1, limit = 5, search = '') => {
         try {
@@ -107,8 +133,23 @@ const BannerManagement = () => {
         setOriginalBannerData(normalizeBannerData(banner));
         form.setFieldsValue({
             type: banner.type,
-            url: banner.url,
         });
+        setBannerFile(null);
+        setBannerUploadProgress(0);
+        setUploadedBannerAsset(banner.url ? { url: banner.url } : null);
+        setPreviewBanner(banner.url || '');
+        setBannerList(
+            banner.url
+                ? [
+                      {
+                          uid: '-1',
+                          name: 'banner',
+                          status: 'done',
+                          url: banner.url,
+                      },
+                  ]
+                : [],
+        );
         setIsModalVisible(true);
     };
 
@@ -130,32 +171,40 @@ const BannerManagement = () => {
         setEditingBanner(null);
         setOriginalBannerData(null);
         form.resetFields();
+        resetBannerState();
         setIsModalVisible(true);
     };
 
-    const handleAddBanner = async (values) => {
+    const handleSaveBanner = async (values) => {
         try {
             setLoading(true);
-            const payload = buildPayload(values);
-            await bannerAPI.createBanner(payload);
-            message.success('Thêm banner thành công');
-        } catch (error) {
-            message.error('Lỗi không thể thêm banner!');
-            console.error(error.response?.data?.message || error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+            let payload = buildPayload(values);
 
-    const handleUpdateBanner = async (values) => {
-        try {
-            setLoading(true);
-            const payload = buildPayload(values);
-            await bannerAPI.updateBanner(editingBanner.id, payload);
-            message.success('Cập nhật banner thành công');
+            if (!bannerFile) {
+                throw new Error('Vui lòng chọn tệp banner từ máy!');
+            }
+
+            const asset =
+                uploadedBannerAsset ||
+                (await uploadBannerAsset(bannerFile, values.type, setBannerUploadProgress));
+            setUploadedBannerAsset(asset);
+            payload.url = asset.url;
+
+            if (editingBanner) {
+                await bannerAPI.updateBanner(editingBanner.id, payload);
+                message.success('Cập nhật banner thành công');
+            } else {
+                await bannerAPI.createBanner(payload);
+                message.success('Thêm banner thành công');
+            }
         } catch (error) {
-            message.error('Lỗi không thể cập nhật banner!');
+            if (error.message) {
+                message.error(error.message);
+            } else {
+                message.error('Lỗi không thể lưu banner!');
+            }
             console.error(error.response?.data?.message || error.message);
+            throw error;
         } finally {
             setLoading(false);
         }
@@ -163,20 +212,28 @@ const BannerManagement = () => {
 
     const handleModalOk = () => {
         form.validateFields().then(async (values) => {
-            const payload = normalizeBannerData(values);
-            if (editingBanner && !hasFormChanged(originalBannerData, payload)) {
-                message.warning('Không có thay đổi nào để cập nhật!');
-                return;
+            try {
+                const payload = normalizeBannerData(values);
+                const hasBannerChanges = bannerFile !== null;
+
+                if (
+                    editingBanner &&
+                    !hasFormChanged(originalBannerData, payload) &&
+                    !hasBannerChanges
+                ) {
+                    message.warning('Không có thay đổi nào để cập nhật!');
+                    return;
+                }
+
+                await handleSaveBanner(values);
+                setIsModalVisible(false);
+                form.resetFields();
+                setOriginalBannerData(null);
+                resetBannerState();
+                fetchBanners(pagination.current || 1, pagination.pageSize || 5, searchKeyword);
+            } catch (error) {
+                // error already handled in handleSaveBanner
             }
-            if (editingBanner) {
-                await handleUpdateBanner(values);
-            } else {
-                await handleAddBanner(values);
-            }
-            setIsModalVisible(false);
-            form.resetFields();
-            setOriginalBannerData(null);
-            fetchBanners(pagination.current || 1, pagination.pageSize || 5, searchKeyword);
         });
     };
 
@@ -225,11 +282,7 @@ const BannerManagement = () => {
             width: 180,
             render: (_, record) => (
                 <Space size="small">
-                    <Button
-                        size="small"
-                        icon={<EyeOutlined />}
-                        onClick={() => handleView(record)}
-                    />
+                    
                     <Button
                         type="primary"
                         className="bg-blue-500!"
@@ -299,7 +352,10 @@ const BannerManagement = () => {
                 title={editingBanner ? 'Chỉnh sửa banner' : 'Thêm banner mới'}
                 open={isModalVisible}
                 onOk={handleModalOk}
-                onCancel={() => setIsModalVisible(false)}
+                onCancel={() => {
+                    setIsModalVisible(false);
+                    resetBannerState();
+                }}
                 okText={editingBanner ? 'Cập nhật' : 'Thêm'}
                 cancelText="Hủy"
                 confirmLoading={isModalVisible && loading}
@@ -312,7 +368,16 @@ const BannerManagement = () => {
                         label="Loại banner"
                         rules={[{ required: true, message: 'Vui lòng chọn loại banner!' }]}
                     >
-                        <Select placeholder="Chọn loại banner">
+                        <Select
+                            placeholder="Chọn loại banner"
+                            onChange={() => {
+                                setBannerFile(null);
+                                setBannerList([]);
+                                setPreviewBanner('');
+                                setUploadedBannerAsset(null);
+                                setBannerUploadProgress(0);
+                            }}
+                        >
                             {bannerTypes.map((item) => (
                                 <Option key={item.value} value={item.value}>
                                     {item.label}
@@ -320,15 +385,74 @@ const BannerManagement = () => {
                             ))}
                         </Select>
                     </Form.Item>
-                    <Form.Item
-                        name="url"
-                        label="URL"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập URL!' },
-                            { type: 'url', message: 'URL không hợp lệ!' },
-                        ]}
-                    >
-                        <Input placeholder="Nhập URL banner" />
+                    <Form.Item label="Tệp banner">
+                        <Upload
+                            accept={form.getFieldValue('type') === 'VIDEO' ? 'video/*' : 'image/*'}
+                            maxCount={1}
+                            listType={form.getFieldValue('type') === 'VIDEO' ? 'text' : 'picture'}
+                            disabled={loading}
+                            fileList={bannerList}
+                            beforeUpload={(file) => {
+                                if (loading) {
+                                    return Upload.LIST_IGNORE;
+                                }
+                                setBannerFile(file);
+                                setBannerUploadProgress(0);
+                                setUploadedBannerAsset(null);
+                                const previewUrl = URL.createObjectURL(file);
+                                setPreviewBanner(previewUrl);
+                                setBannerList([
+                                    {
+                                        uid: file.uid,
+                                        name: file.name,
+                                        status: 'done',
+                                        url: previewUrl,
+                                    },
+                                ]);
+                                return false;
+                            }}
+                            onRemove={() => {
+                                if (loading) return false;
+                                setBannerFile(null);
+                                setBannerUploadProgress(0);
+                                setUploadedBannerAsset(null);
+                                setBannerList([]);
+                                setPreviewBanner('');
+                                return true;
+                            }}
+                        >
+                            <Button icon={<UploadOutlined />}>
+                                {bannerList.length > 0 ? 'Chọn lại tệp' : 'Chọn tệp từ máy'}
+                            </Button>
+                        </Upload>
+                        <div style={{ marginTop: 8 }}>
+                            <small>
+                                Chọn file banner từ máy và upload trực tiếp.
+                            </small>
+                        </div>
+                        {bannerUploadProgress > 0 && bannerUploadProgress < 100 && (
+                            <div style={{ marginTop: 8 }}>
+                                Đang upload: {bannerUploadProgress}%
+                            </div>
+                        )}
+                        {previewBanner && (
+                            <div style={{ marginTop: 16 }}>
+                                {form.getFieldValue('type') === 'VIDEO' ? (
+                                    <video
+                                        src={previewBanner}
+                                        controls
+                                        style={{ width: '100%', maxHeight: 240, borderRadius: 12 }}
+                                    />
+                                ) : (
+                                    <Image
+                                        src={previewBanner}
+                                        alt="Preview"
+                                        width={280}
+                                        style={{ borderRadius: 12 }}
+                                    />
+                                )}
+                            </div>
+                        )}
                     </Form.Item>
                 </Form>
             </Modal>

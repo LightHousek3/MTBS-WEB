@@ -17,6 +17,7 @@ import {
     TrophyOutlined,
     DesktopOutlined,
     ContainerOutlined,
+    MessageOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -129,6 +130,12 @@ const AdminLayout = () => {
             icon: <TrophyOutlined />,
             label: 'Quản lý khuyến mãi',
             onClick: () => navigate('/admin/promotions'),
+        },
+        {
+            key: '/admin/application-messages',
+            icon: <MessageOutlined />,
+            label: 'Application Messages',
+            onClick: () => navigate('/admin/application-messages'),
         },
     ];
 

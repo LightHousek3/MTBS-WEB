@@ -22,6 +22,7 @@ import {
     NewsManagement,
     BookingManagement,
     SeatManagement,
+    ReviewManagement,
 } from './pages/admin';
 
 function App() {
@@ -70,6 +71,7 @@ function App() {
                                 <Route path="promotions" element={<PromotionManagement />} />
                                 <Route path="bookings" element={<BookingManagement />} />
                                 <Route path="seats" element={<SeatManagement />} />
+                                <Route path="reviews" element={<ReviewManagement />} />
                             </Route>
                             {/* Error pages */}
                             <Route path="/unauthorized" element={<UnAuthorized />} />

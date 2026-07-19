@@ -15,6 +15,7 @@ import NewsManagement from './NewsManagement';
 import BookingManagement from './BookingManagement';
 import SeatManagement from './SeatManagement';
 import UserManagement from './UserManagement';
+import ReviewManagement from './ReviewManagement';
 
 export {
     Dashboard,
@@ -34,4 +35,5 @@ export {
     BookingManagement,
     SeatManagement,
     UserManagement,
+    ReviewManagement,
 };

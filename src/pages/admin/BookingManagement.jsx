@@ -52,6 +52,52 @@ const getSeatLabel = (seatItem) => {
     const seatType = seatItem?.seat?.type || '-';
     return `${seatNumber} (${seatType})`;
 };
+const money = (value) => `${Number(value || 0).toLocaleString('vi-VN')} đ`;
+const sumBy = (items = [], selector) =>
+    items.reduce((total, item) => total + Number(selector(item) || 0), 0);
+
+const getSeatBaseTotal = (booking) => sumBy(booking?.seats, (item) => item.price);
+const getSeatFinalTotal = (booking) => {
+    const apiTotal = Number(booking?.totalPriceMovie || 0);
+    return apiTotal > 0 ? apiTotal : sumBy(booking?.seats, (item) => item.finalPrice ?? item.price);
+};
+const getServiceBaseTotal = (booking) => sumBy(booking?.services, (item) => item.total);
+const getServiceFinalTotal = (booking) => {
+    const apiTotal = Number(booking?.totalPriceService || 0);
+    return apiTotal > 0
+        ? apiTotal
+        : sumBy(booking?.services, (item) => item.finalTotal ?? item.total);
+};
+const getPromotionDiscount = (booking) => {
+    const apiDiscount = Number(booking?.promotionDiscount || 0);
+    if (apiDiscount > 0) return apiDiscount;
+    return Math.max(
+        0,
+        getSeatBaseTotal(booking) +
+            getServiceBaseTotal(booking) -
+            getSeatFinalTotal(booking) -
+            getServiceFinalTotal(booking),
+    );
+};
+const getPayableTotal = (booking) => {
+    const apiTotal = Number(booking?.totalPrice || 0);
+    if (apiTotal > 0) return apiTotal;
+    return Math.max(
+        0,
+        getSeatFinalTotal(booking) +
+            getServiceFinalTotal(booking) -
+            Number(booking?.pointsUsed || 0),
+    );
+};
+const getServiceUnitPrice = (serviceItem) =>
+    Number(serviceItem?.unitPrice ?? serviceItem?.service?.price ?? 0);
+const getServiceLineBaseTotal = (serviceItem) => {
+    const total = Number(serviceItem?.total || 0);
+    if (total > 0) return total;
+    return getServiceUnitPrice(serviceItem) * Number(serviceItem?.quantity || 0);
+};
+const getServiceLineFinalTotal = (serviceItem) =>
+    Number(serviceItem?.finalTotal ?? getServiceLineBaseTotal(serviceItem));
 
 const yearOptions = (() => {
     const currentYear = new Date().getFullYear();
@@ -136,10 +182,11 @@ const BookingManagement = () => {
     };
 
     const bookingSummary = useMemo(() => {
-        if (!viewingBooking) return { seatCount: 0, serviceCount: 0 };
+        if (!viewingBooking) return { seatCount: 0, serviceQuantity: 0, serviceLineCount: 0 };
         return {
             seatCount: viewingBooking.seats?.length || 0,
-            serviceCount: viewingBooking.services?.length || 0,
+            serviceQuantity: sumBy(viewingBooking.services, (item) => item.quantity),
+            serviceLineCount: viewingBooking.services?.length || 0,
         };
     }, [viewingBooking]);
 
@@ -212,7 +259,10 @@ const BookingManagement = () => {
                 <Title level={2} style={{ margin: 0 }}>
                     Quản lý đặt vé
                 </Title>
-                <Button icon={<ReloadOutlined />} onClick={() => fetchBookings(1, pagination.pageSize)}>
+                <Button
+                    icon={<ReloadOutlined />}
+                    onClick={() => fetchBookings(1, pagination.pageSize)}
+                >
                     Tải lại
                 </Button>
             </div>
@@ -309,7 +359,8 @@ const BookingManagement = () => {
                                     {viewingBooking.user?.phone || '-'}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Thời gian tạo">
-                                    {formatDate(viewingBooking.createdAt, 'HH:mm dd/MM/yyyy') || '-'}
+                                    {formatDate(viewingBooking.createdAt, 'HH:mm dd/MM/yyyy') ||
+                                        '-'}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Phim">
                                     {viewingBooking.showtime?.movie?.title || '-'}
@@ -329,31 +380,51 @@ const BookingManagement = () => {
                                     {bookingSummary.seatCount}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Số dịch vụ">
-                                    {bookingSummary.serviceCount}
+                                    {bookingSummary.serviceQuantity}
+                                    {bookingSummary.serviceLineCount > 0 && (
+                                        <Text type="secondary">
+                                            {' '}
+                                            ({bookingSummary.serviceLineCount} loại)
+                                        </Text>
+                                    )}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Tiền ghế">
-                                    {Number(viewingBooking.seatTotal || 0).toLocaleString('vi-VN')} đ
+                                <Descriptions.Item label="Giá gốc vé">
+                                    {money(getSeatBaseTotal(viewingBooking))}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Tiền dịch vụ">
-                                    {Number(viewingBooking.serviceTotal || 0).toLocaleString('vi-VN')} đ
+                                <Descriptions.Item label="Giá cuối vé">
+                                    {money(getSeatFinalTotal(viewingBooking))}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Giá gốc dịch vụ">
+                                    {money(getServiceBaseTotal(viewingBooking))}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Giá cuối dịch vụ">
+                                    {money(getServiceFinalTotal(viewingBooking))}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Giảm giá">
-                                    {Number(viewingBooking.promotionDiscount || 0).toLocaleString(
+                                    {money(getPromotionDiscount(viewingBooking))}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Điểm đã dùng">
+                                    {Number(viewingBooking.pointsUsed || 0).toLocaleString('vi-VN')}{' '}
+                                    điểm
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Điểm nhận được">
+                                    {Number(viewingBooking.pointsEarned || 0).toLocaleString(
                                         'vi-VN',
                                     )}{' '}
-                                    đ
+                                    điểm
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Tổng tiền">
-                                    <Text strong>
-                                        {Number(viewingBooking.totalPrice || 0).toLocaleString('vi-VN')} đ
-                                    </Text>
+                                    <Text strong>{money(getPayableTotal(viewingBooking))}</Text>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Ghế đã đặt" span={2}>
                                     <Space size={[4, 8]} wrap>
                                         {(viewingBooking.seats || []).map((seatItem, index) => (
-                                            <Tag key={`${seatItem.seat?._id || index}-${seatItem.price}`}>
-                                                {getSeatLabel(seatItem)} -{' '}
-                                                {Number(seatItem.price || 0).toLocaleString('vi-VN')} đ
+                                            <Tag
+                                                key={`${seatItem.seat?._id || index}-${seatItem.finalPrice}`}
+                                            >
+                                                {getSeatLabel(seatItem)} | Giá gốc:{' '}
+                                                {money(seatItem.price)} | Giá cuối:{' '}
+                                                {money(seatItem.finalPrice ?? seatItem.price)}
                                             </Tag>
                                         ))}
                                     </Space>
@@ -362,9 +433,16 @@ const BookingManagement = () => {
                                     {viewingBooking.services?.length ? (
                                         <Space direction="vertical" size="small" className="w-full">
                                             {viewingBooking.services.map((serviceItem, index) => (
-                                                <Text key={`${serviceItem.service?._id || index}-${serviceItem.total}`}>
-                                                    {serviceItem.service?.name || '-'} x {serviceItem.quantity} ={' '}
-                                                    {Number(serviceItem.total || 0).toLocaleString('vi-VN')} đ
+                                                <Text
+                                                    key={`${serviceItem.service?._id || index}-${serviceItem.total}`}
+                                                >
+                                                    {serviceItem.service?.name || '-'} x{' '}
+                                                    {serviceItem.quantity} | Đơn giá:{' '}
+                                                    {money(getServiceUnitPrice(serviceItem))} | Giá
+                                                    gốc:{' '}
+                                                    {money(getServiceLineBaseTotal(serviceItem))} |
+                                                    Giá cuối:{' '}
+                                                    {money(getServiceLineFinalTotal(serviceItem))}
                                                 </Text>
                                             ))}
                                         </Space>
@@ -391,7 +469,10 @@ const BookingManagement = () => {
                                                             {paymentConfig.label}
                                                         </Tag>
                                                         <Text>
-                                                            {Number(payment.amount || 0).toLocaleString('vi-VN')} đ
+                                                            {Number(
+                                                                payment.amount || 0,
+                                                            ).toLocaleString('vi-VN')}{' '}
+                                                            đ
                                                         </Text>
                                                         <Text type="secondary">
                                                             {formatDate(

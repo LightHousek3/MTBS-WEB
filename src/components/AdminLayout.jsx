@@ -6,6 +6,7 @@ import {
     UserOutlined,
     AppstoreOutlined,
     LogoutOutlined,
+    TeamOutlined,
     CodeSandboxOutlined,
     ShopOutlined,
     VideoCameraOutlined,
@@ -22,6 +23,8 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+
+const isAdminRoute = (path) => path.startsWith('/admin');
 
 const LOGO_URL = 'https://res.cloudinary.com/dtnmtkqq4/image/upload/v1781900832/FG-logo_xzwezt.png';
 
@@ -139,6 +142,12 @@ const AdminLayout = () => {
             onClick: () => navigate('/admin/promotions'),
         },
         {
+            key: '/admin/users',
+            icon: <TeamOutlined />,
+            label: 'Quản lý người dùng',
+            onClick: () => navigate('/admin/users'),
+        },
+        {
             key: '/admin/application-messages',
             icon: <MessageOutlined />,
             label: 'Application Messages',
@@ -152,6 +161,12 @@ const AdminLayout = () => {
     };
 
     const userMenuItems = [
+        {
+            key: 'profile',
+            label: 'Hồ sơ cá nhân',
+            icon: <UserOutlined />,
+            onClick: () => navigate('/profile'),
+        },
         {
             key: 'logout',
             label: 'Đăng xuất',

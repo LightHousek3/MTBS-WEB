@@ -11,9 +11,11 @@ import {
   VideoCameraOutlined
 } from '@ant-design/icons';
 import { statisticAPI } from '../../apis';
-import { Chart as ChartJS } from 'chart.js/auto';
+import { Chart as ChartJS, registerables } from 'chart.js';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import dayjs from 'dayjs';
+
+ChartJS.register(...registerables);
 
 const { Title, Text } = Typography;
 

@@ -6,6 +6,7 @@ import { PublicRoute, ProtectedRoute, GlobalAuthListener, AdminLayout } from './
 import { Dashboard } from './pages/admin';
 import { NotFound, UnAuthorized } from './pages/error';
 import { Login } from './pages/auth';
+import ProfilePage from './pages/customer/ProfilePage';
 import {
     GenreManagement,
     ServiceManagement,
@@ -22,6 +23,8 @@ import {
     NewsManagement,
     BookingManagement,
     SeatManagement,
+    UserManagement,
+    ReviewManagement,
 } from './pages/admin';
 
 function App() {
@@ -49,6 +52,7 @@ function App() {
                                 }
                             />
                             {/* Protected admin routes */}
+                            <Route path="/profile" element={<ProtectedRoute adminOnly={false}><ProfilePage /></ProtectedRoute>} />
                             <Route
                                 path="/admin"
                                 element={<ProtectedRoute>{<AdminLayout />}</ProtectedRoute>}
@@ -70,6 +74,8 @@ function App() {
                                 <Route path="promotions" element={<PromotionManagement />} />
                                 <Route path="bookings" element={<BookingManagement />} />
                                 <Route path="seats" element={<SeatManagement />} />
+                                <Route path="users" element={<UserManagement />} />
+                                <Route path="reviews" element={<ReviewManagement />} />
                             </Route>
                             {/* Error pages */}
                             <Route path="/unauthorized" element={<UnAuthorized />} />

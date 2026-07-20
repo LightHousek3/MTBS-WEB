@@ -6,6 +6,7 @@ import {
     UserOutlined,
     AppstoreOutlined,
     LogoutOutlined,
+    TeamOutlined,
     CodeSandboxOutlined,
     ShopOutlined,
     VideoCameraOutlined,
@@ -17,9 +18,13 @@ import {
     TrophyOutlined,
     DesktopOutlined,
     ContainerOutlined,
+    MessageOutlined,
+    StarOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+
+const isAdminRoute = (path) => path.startsWith('/admin');
 
 const LOGO_URL = 'https://res.cloudinary.com/dtnmtkqq4/image/upload/v1781900832/FG-logo_xzwezt.png';
 
@@ -101,6 +106,12 @@ const AdminLayout = () => {
             onClick: () => navigate('/admin/bookings'),
         },
         {
+            key: '/admin/reviews',
+            icon: <StarOutlined />,
+            label: 'Quản lý đánh giá',
+            onClick: () => navigate('/admin/reviews'),
+        },
+        {
             key: '/admin/seats',
             icon: <AppstoreOutlined />,
             label: 'Quản lý ghế',
@@ -130,6 +141,18 @@ const AdminLayout = () => {
             label: 'Quản lý khuyến mãi',
             onClick: () => navigate('/admin/promotions'),
         },
+        {
+            key: '/admin/users',
+            icon: <TeamOutlined />,
+            label: 'Quản lý người dùng',
+            onClick: () => navigate('/admin/users'),
+        },
+        {
+            key: '/admin/application-messages',
+            icon: <MessageOutlined />,
+            label: 'Application Messages',
+            onClick: () => navigate('/admin/application-messages'),
+        },
     ];
 
     const handleLogout = () => {
@@ -138,6 +161,12 @@ const AdminLayout = () => {
     };
 
     const userMenuItems = [
+        {
+            key: 'profile',
+            label: 'Hồ sơ cá nhân',
+            icon: <UserOutlined />,
+            onClick: () => navigate('/profile'),
+        },
         {
             key: 'logout',
             label: 'Đăng xuất',

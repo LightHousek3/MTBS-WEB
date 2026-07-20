@@ -66,7 +66,7 @@ const GenreManagement = () => {
             message.success('Xóa thể loại thành công!');
             fetchGenres(pagination?.current || 1, pagination?.pageSize || 5, searchKeyword);
         } catch (error) {
-            message.error('Lỗi khi xóa thể loại!');
+            message.error(error.response?.data?.message || 'Lỗi khi xóa thể loại!');
             console.log(error.response?.data?.message);
         } finally {
             setLoading(false);

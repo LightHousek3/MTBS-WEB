@@ -107,7 +107,7 @@ const TheaterManagement = () => {
             fetchTheaters(pagination.current || 1, pagination.pageSize || 5, searchKeyword);
             message.success('Xóa rạp thành công');
         } catch (error) {
-            message.error('Lỗi không thể xóa rạp mới!');
+            message.error(error.response?.data?.message || 'Lỗi không thể xóa rạp!');
             console.log(error.response?.data?.message);
         } finally {
             setLoading(false);

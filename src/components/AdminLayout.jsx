@@ -20,6 +20,7 @@ import {
     ContainerOutlined,
     MessageOutlined,
     StarOutlined,
+    DollarOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -110,6 +111,12 @@ const AdminLayout = () => {
             icon: <StarOutlined />,
             label: 'Quản lý đánh giá',
             onClick: () => navigate('/admin/reviews'),
+        },
+        {
+            key: '/admin/refund-requests',
+            icon: <DollarOutlined />,
+            label: 'Quản lý hoàn tiền',
+            onClick: () => navigate('/admin/refund-requests'),
         },
         {
             key: '/admin/seats',

@@ -111,6 +111,12 @@ const bookingAPI = {
     getBookingById: (id, params = {}) => apiClient.get(`/bookings/${id}`, { params }),
 };
 
+const refundRequestAPI = {
+    getRefundRequests: (params = {}) => apiClient.get('/refund-requests', { params }),
+    getRefundRequestById: (id) => apiClient.get(`/refund-requests/${id}`),
+    processRefundRequest: (id, data) => apiClient.patch(`/refund-requests/${id}/process`, data),
+};
+
 const reviewAPI = {
     getReviews: (params = {}) => apiClient.get('/reviews', { params }),
     updateReviewStatus: (id, status) => apiClient.patch(`/reviews/${id}/status`, { status }),
@@ -204,4 +210,5 @@ export {
     ticketPriceAPI,
     statisticAPI,
     reviewAPI,
+    refundRequestAPI,
 };

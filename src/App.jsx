@@ -25,6 +25,7 @@ import {
     SeatManagement,
     UserManagement,
     ReviewManagement,
+    RefundRequestManagement,
 } from './pages/admin';
 
 function App() {
@@ -76,6 +77,7 @@ function App() {
                                 <Route path="seats" element={<SeatManagement />} />
                                 <Route path="users" element={<UserManagement />} />
                                 <Route path="reviews" element={<ReviewManagement />} />
+                                <Route path="refund-requests" element={<RefundRequestManagement />} />
                             </Route>
                             {/* Error pages */}
                             <Route path="/unauthorized" element={<UnAuthorized />} />

@@ -16,6 +16,7 @@ import BookingManagement from './BookingManagement';
 import SeatManagement from './SeatManagement';
 import UserManagement from './UserManagement';
 import ReviewManagement from './ReviewManagement';
+import RefundRequestManagement from './RefundRequestManagement';
 
 export {
     Dashboard,
@@ -36,4 +37,5 @@ export {
     SeatManagement,
     UserManagement,
     ReviewManagement,
+    RefundRequestManagement,
 };

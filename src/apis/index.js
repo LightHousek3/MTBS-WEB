@@ -111,6 +111,12 @@ const bookingAPI = {
     getBookingById: (id, params = {}) => apiClient.get(`/bookings/${id}`, { params }),
 };
 
+const reviewAPI = {
+    getReviews: (params = {}) => apiClient.get('/reviews', { params }),
+    updateReviewStatus: (id, status) => apiClient.patch(`/reviews/${id}/status`, { status }),
+    deleteReview: (id) => apiClient.delete(`/reviews/${id}`),
+};
+
 const redeemAPI = {
     getRedeems: (params = {}) => apiClient.get('/redeems', { params }),
     getRedeemById: (id) => apiClient.get(`/redeems/${id}`),
@@ -197,4 +203,5 @@ export {
     newsAPI,
     ticketPriceAPI,
     statisticAPI,
+    reviewAPI,
 };

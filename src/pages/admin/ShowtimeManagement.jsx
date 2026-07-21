@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   App,
   Button,
@@ -28,6 +28,8 @@ import { formatDate, hasFormChanged } from "../../utils";
 const { Title, Text } = Typography;
 
 const ALL_STATUS = "ALL";
+const LOOKUP_PAGE_SIZE = 20;
+const LOOKUP_SEARCH_DELAY = 350;
 
 const SHOWTIME_STATUS_LABELS = {
   UPCOMING: { text: "Sắp chiếu", color: "blue" },
@@ -46,6 +48,33 @@ const getScreenName = (showtime) => showtime.screen?.name || "-";
 const getTheaterName = (showtime) => showtime.screen?.theater?.name || "-";
 const getScreenTheaterName = (screen) => screen.theater?.name || "Chưa có rạp";
 
+const mergeById = (items, itemsToKeep = []) => {
+  const result = [];
+  const seenIds = new Set();
+
+  [...itemsToKeep, ...items].forEach((item) => {
+    const id = getId(item);
+    if (!id || seenIds.has(id)) return;
+    seenIds.add(id);
+    result.push(item);
+  });
+
+  return result;
+};
+
+const mergeShowtimeDetail = (detail, record) => {
+  const detailShowtime = detail?.showtime || {};
+
+  return {
+    ...detail,
+    showtime: {
+      ...detailShowtime,
+      startTime: detailShowtime.startTime || record.startTime,
+      endTime: detailShowtime.endTime || record.endTime,
+    },
+  };
+};
+
 const normalizeShowtimeForCompare = (values) => ({
   movie: values.movie,
   screen: values.screen,
@@ -59,13 +88,18 @@ const ShowtimeManagement = () => {
   const [showtimes, setShowtimes] = useState([]);
   const [movies, setMovies] = useState([]);
   const [screens, setScreens] = useState([]);
+  const movieSearchTimerRef = useRef(null);
+  const screenSearchTimerRef = useRef(null);
+  const movieLookupRequestRef = useRef(0);
+  const screenLookupRequestRef = useRef(0);
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 5,
     total: 0,
   });
   const [loading, setLoading] = useState(false);
-  const [lookupLoading, setLookupLoading] = useState(false);
+  const [movieLookupLoading, setMovieLookupLoading] = useState(false);
+  const [screenLookupLoading, setScreenLookupLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingShowtime, setEditingShowtime] = useState(null);
   const [originalShowtimeData, setOriginalShowtimeData] = useState(null);
@@ -76,25 +110,51 @@ const ShowtimeManagement = () => {
   const [seatingDetail, setSeatingDetail] = useState(null);
 
   const selectedMovie = useMemo(
-    () => movies.find((movie) => movie.id === selectedMovieId),
+    () => movies.find((movie) => getId(movie) === selectedMovieId),
     [movies, selectedMovieId],
   );
 
-  const fetchLookups = async () => {
+  const fetchMovieLookup = async (keyword = "", itemsToKeep = []) => {
     try {
-      setLookupLoading(true);
-      const [movieResponse, screenResponse] = await Promise.all([
-        movieAPI.getMovies({ page: 1, limit: 100, sortBy: "title:asc" }),
-        screenAPI.getScreens(),
-      ]);
+      const requestId = ++movieLookupRequestRef.current;
+      setMovieLookupLoading(true);
+      const response = await movieAPI.getMovies({
+        page: 1,
+        limit: LOOKUP_PAGE_SIZE,
+        sortBy: "title:asc",
+        keyword: keyword.trim() || undefined,
+      });
 
-      setMovies(movieResponse.data.data || []);
-      setScreens(screenResponse.data.data || []);
+      if (requestId === movieLookupRequestRef.current) {
+        setMovies(mergeById(response.data.data || [], itemsToKeep));
+      }
     } catch (error) {
       message.error("Không thể tải dữ liệu phim hoặc phòng chiếu.");
       console.error(error);
     } finally {
-      setLookupLoading(false);
+      setMovieLookupLoading(false);
+    }
+  };
+
+  const fetchScreenLookup = async (search = "", itemsToKeep = []) => {
+    try {
+      const requestId = ++screenLookupRequestRef.current;
+      setScreenLookupLoading(true);
+      const response = await screenAPI.getScreens({
+        page: 1,
+        limit: LOOKUP_PAGE_SIZE,
+        sortBy: "name:asc",
+        search: search.trim() || undefined,
+      });
+
+      if (requestId === screenLookupRequestRef.current) {
+        setScreens(mergeById(response.data.data || [], itemsToKeep));
+      }
+    } catch (error) {
+      message.error("Không thể tải danh sách phòng chiếu.");
+      console.error(error);
+    } finally {
+      setScreenLookupLoading(false);
     }
   };
 
@@ -133,9 +193,32 @@ const ShowtimeManagement = () => {
   };
 
   useEffect(() => {
-    fetchLookups();
+    fetchMovieLookup();
+    fetchScreenLookup();
     fetchShowtimes(1, 5);
+
+    return () => {
+      clearTimeout(movieSearchTimerRef.current);
+      clearTimeout(screenSearchTimerRef.current);
+    };
   }, []);
+
+  const handleMovieSearch = (value) => {
+    clearTimeout(movieSearchTimerRef.current);
+    movieSearchTimerRef.current = setTimeout(() => {
+      fetchMovieLookup(value, selectedMovie ? [selectedMovie] : []);
+    }, LOOKUP_SEARCH_DELAY);
+  };
+
+  const handleScreenSearch = (value) => {
+    const selectedScreenId = form.getFieldValue("screen");
+    const selectedScreen = screens.find((screen) => getId(screen) === selectedScreenId);
+
+    clearTimeout(screenSearchTimerRef.current);
+    screenSearchTimerRef.current = setTimeout(() => {
+      fetchScreenLookup(value, selectedScreen ? [selectedScreen] : []);
+    }, LOOKUP_SEARCH_DELAY);
+  };
 
   const resetModalState = () => {
     form.resetFields();
@@ -160,12 +243,14 @@ const ShowtimeManagement = () => {
     setEditingShowtime(record);
     setOriginalShowtimeData(normalizeShowtimeForCompare(formValues));
     setSelectedMovieId(formValues.movie);
+    setMovies((currentMovies) => mergeById(currentMovies, record.movie ? [record.movie] : []));
+    setScreens((currentScreens) => mergeById(currentScreens, record.screen ? [record.screen] : []));
     form.setFieldsValue(formValues);
     setIsModalOpen(true);
   };
 
   const recalculateEndTime = (movieId = selectedMovieId, startTime) => {
-    const movie = movies.find((item) => item.id === movieId);
+    const movie = movies.find((item) => getId(item) === movieId);
     if (!movie?.duration || !startTime) {
       form.setFieldValue("endTime", null);
       return;
@@ -177,6 +262,11 @@ const ShowtimeManagement = () => {
   const handleMovieChange = (movieId) => {
     setSelectedMovieId(movieId);
     recalculateEndTime(movieId, form.getFieldValue("startTime"));
+  };
+
+  const handleMovieClear = () => {
+    setSelectedMovieId(null);
+    form.setFieldValue("endTime", null);
   };
 
   const handleStartTimeChange = (value) => {
@@ -245,7 +335,7 @@ const ShowtimeManagement = () => {
       setDetailLoading(true);
       setSeatingDetail(null);
       const response = await showtimeAPI.getShowtimeSeating(record.id);
-      setSeatingDetail(response.data.data);
+      setSeatingDetail(mergeShowtimeDetail(response.data.data, record));
     } catch (error) {
       message.error(error.response?.data?.message || "Không thể tải chi tiết suất chiếu.");
       console.error(error);
@@ -397,11 +487,17 @@ const ShowtimeManagement = () => {
           >
             <Select
               showSearch
-              loading={lookupLoading}
+              allowClear
+              filterOption={false}
+              loading={screenLookupLoading}
               placeholder="Chọn phòng chiếu"
               optionFilterProp="label"
+              onSearch={handleScreenSearch}
+              onDropdownVisibleChange={(open) => {
+                if (open && screens.length === 0) fetchScreenLookup();
+              }}
               options={screens.map((screen) => ({
-                value: screen.id,
+                value: getId(screen),
                 label: `${screen.name} - ${getScreenTheaterName(screen)} (${screen.seatCapacity} ghế)`,
               }))}
             />
@@ -414,11 +510,18 @@ const ShowtimeManagement = () => {
           >
             <Select
               showSearch
-              loading={lookupLoading}
+              allowClear
+              filterOption={false}
+              loading={movieLookupLoading}
               placeholder="Chọn phim"
               optionFilterProp="label"
+              onSearch={handleMovieSearch}
+              onClear={handleMovieClear}
+              onDropdownVisibleChange={(open) => {
+                if (open && movies.length === 0) fetchMovieLookup();
+              }}
               options={movies.map((movie) => ({
-                value: movie.id,
+                value: getId(movie),
                 label: `${movie.title} (${movie.duration} phút)`,
               }))}
               onChange={handleMovieChange}

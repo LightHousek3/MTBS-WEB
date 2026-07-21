@@ -65,6 +65,8 @@ const UserManagement = () => {
     };
 
     const openStatusModal = (user) => {
+        if (user.role === 'ADMIN') return;
+
         setSelectedUser(user);
         statusForm.setFieldsValue({ status: user.status });
         setIsStatusModalOpen(true);
@@ -131,9 +133,11 @@ const UserManagement = () => {
                         <Button size="small" icon={<UserOutlined />} onClick={() => openDetail(record)}>
                             Xem
                         </Button>
-                        <Button size="small" icon={<EditOutlined />} onClick={() => openStatusModal(record)}>
-                            Đổi trạng thái
-                        </Button>
+                        {record.role !== 'ADMIN' && (
+                            <Button type="primary" size="small" icon={<EditOutlined />} onClick={() => openStatusModal(record)}>
+                                Đổi trạng thái
+                            </Button>
+                        )}
                     </Space>
                 ),
             },

@@ -123,6 +123,7 @@ const ShowtimeManagement = () => {
         limit: LOOKUP_PAGE_SIZE,
         sortBy: "title:asc",
         keyword: keyword.trim() || undefined,
+        availableForShowtime: true,
       });
 
       if (requestId === movieLookupRequestRef.current) {
@@ -522,7 +523,7 @@ const ShowtimeManagement = () => {
               }}
               options={movies.map((movie) => ({
                 value: getId(movie),
-                label: `${movie.title} (${movie.duration} phút)`,
+                label: `${movie.title} (${movie.duration} phút) - ${formatDate(movie.releaseDate, "dd/MM/yyyy") || "-"} -> ${formatDate(movie.endDate, "dd/MM/yyyy") || "-"}`,
               }))}
               onChange={handleMovieChange}
             />

@@ -17,7 +17,6 @@ import {
 import {
     DeleteOutlined,
     EditOutlined,
-    EyeOutlined,
     PlusOutlined,
     ReloadOutlined,
     SettingOutlined,
@@ -276,22 +275,6 @@ const SeatManagement = () => {
         setModalOpen(true);
     };
 
-    const openDetailModal = async (seat) => {
-        try {
-            setDetailOpen(true);
-            setDetailLoading(true);
-            setViewingSeat(null);
-            const response = await seatAPI.getSeatById(seat.id || seat._id);
-            setViewingSeat(response.data.data);
-        } catch (error) {
-            message.error(error.response?.data?.message || 'Không thể tải chi tiết ghế.');
-            console.error(error);
-            setDetailOpen(false);
-        } finally {
-            setDetailLoading(false);
-        }
-    };
-
     const handleSubmit = async () => {
         try {
             const values = await form.validateFields();
@@ -535,7 +518,7 @@ const SeatManagement = () => {
             width: 180,
             render: (_, record) => (
                 <Space size="small">
-                    <Button size="small" icon={<EyeOutlined />} onClick={() => openDetailModal(record)} />
+                    
                     <Button
                         type="primary"
                         size="small"

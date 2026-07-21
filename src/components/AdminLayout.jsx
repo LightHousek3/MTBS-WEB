@@ -79,7 +79,7 @@ const AdminLayout = () => {
         {
             key: '/admin/festivals',
             icon: <GiftOutlined />,
-            label: 'Quản lý chương trình',
+            label: 'Quản lý sự kiện',
             onClick: () => navigate('/admin/festivals'),
         },
         {

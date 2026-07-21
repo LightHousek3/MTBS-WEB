@@ -345,7 +345,7 @@ const FestivalManagement = () => {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <Title level={2} style={{ margin: 0 }}>
-                    Quản lý chương trình
+                    Quản lý sự kiện
                 </Title>
                 <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd} className="bg-primary">
                     Thêm chương trình

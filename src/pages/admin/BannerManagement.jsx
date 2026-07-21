@@ -3,10 +3,10 @@ import {
     App,
     Button,
     Card,
+    DatePicker,
     Descriptions,
     Form,
     Image,
-    Input,
     Modal,
     Popconfirm,
     Select,
@@ -16,13 +16,13 @@ import {
     Typography,
     Upload,
 } from 'antd';
-import { EditOutlined, DeleteOutlined, PlusOutlined, SearchOutlined, EyeOutlined, UploadOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, PlusOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons';
 import { bannerAPI, cloudinaryAPI } from '../../apis';
 import { formatDate, hasFormChanged } from '../../utils';
 
-const { Title, Text } = Typography;
-const { Search } = Input;
+const { Title } = Typography;
 const { Option } = Select;
+const ALL_BANNER_TYPES = 'ALL';
 
 const bannerTypes = [
     { value: 'IMAGE', label: 'Ảnh', color: 'blue' },
@@ -32,7 +32,8 @@ const bannerTypes = [
 const BannerManagement = () => {
     const [banners, setBanners] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 5, total: 0 });
-    const [searchKeyword, setSearchKeyword] = useState('');
+    const [typeFilter, setTypeFilter] = useState(ALL_BANNER_TYPES);
+    const [createdAtFilter, setCreatedAtFilter] = useState(null);
     const [editingBanner, setEditingBanner] = useState(null);
     const [viewingBanner, setViewingBanner] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -80,13 +81,19 @@ const BannerManagement = () => {
         setUploadedBannerAsset(null);
     };
 
-    const fetchBanners = async (page = 1, limit = 5, search = '') => {
+    const fetchBanners = async (
+        page = 1,
+        limit = 5,
+        nextType = typeFilter,
+        nextCreatedAt = createdAtFilter,
+    ) => {
         try {
             setLoading(true);
             const params = {
                 page,
                 limit,
-                ...(search ? { search } : {}),
+                ...(nextType && nextType !== ALL_BANNER_TYPES ? { type: nextType } : {}),
+                ...(nextCreatedAt ? { createdAt: nextCreatedAt.format('YYYY-MM-DD') } : {}),
             };
             const response = await bannerAPI.getBanners(params);
             const data = response.data.data || [];
@@ -109,9 +116,20 @@ const BannerManagement = () => {
         fetchBanners();
     }, []);
 
-    const handleSearch = (value) => {
-        setSearchKeyword(value);
-        fetchBanners(1, pagination.pageSize || 5, value);
+    const handleTypeFilterChange = (value) => {
+        setTypeFilter(value);
+        fetchBanners(1, pagination.pageSize || 5, value, createdAtFilter);
+    };
+
+    const handleCreatedAtFilterChange = (value) => {
+        setCreatedAtFilter(value);
+        fetchBanners(1, pagination.pageSize || 5, typeFilter, value);
+    };
+
+    const handleResetFilters = () => {
+        setTypeFilter(ALL_BANNER_TYPES);
+        setCreatedAtFilter(null);
+        fetchBanners(1, pagination.pageSize || 5, ALL_BANNER_TYPES, null);
     };
 
     const handleView = async (record) => {
@@ -158,7 +176,7 @@ const BannerManagement = () => {
             setLoading(true);
             await bannerAPI.deleteBanner(id);
             message.success('Xóa banner thành công');
-            fetchBanners(pagination.current || 1, pagination.pageSize || 5, searchKeyword);
+            fetchBanners(pagination.current || 1, pagination.pageSize || 5);
         } catch (error) {
             message.error('Lỗi không thể xóa banner!');
             console.error(error.response?.data?.message || error.message);
@@ -230,7 +248,7 @@ const BannerManagement = () => {
                 form.resetFields();
                 setOriginalBannerData(null);
                 resetBannerState();
-                fetchBanners(pagination.current || 1, pagination.pageSize || 5, searchKeyword);
+                fetchBanners(pagination.current || 1, pagination.pageSize || 5);
             } catch (error) {
                 // error already handled in handleSaveBanner
             }
@@ -260,13 +278,6 @@ const BannerManagement = () => {
                     </a>
                 ),
             width: 140,
-        },
-        {
-            title: 'URL',
-            dataIndex: 'url',
-            key: 'url',
-            ellipsis: true,
-            render: (text) => <Text copyable>{text}</Text>,
         },
         {
             title: 'Ngày tạo',
@@ -316,14 +327,32 @@ const BannerManagement = () => {
 
             <Card>
                 <div className="mb-4 flex flex-wrap gap-3 items-center justify-between">
-                    <Search
-                        placeholder="Tìm kiếm theo URL"
-                        allowClear
-                        enterButton={<SearchOutlined />}
-                        size="middle"
-                        onSearch={handleSearch}
-                        style={{ width: 320 }}
-                    />
+                    <Space wrap>
+                        <Select
+                            value={typeFilter}
+                            style={{ width: 180 }}
+                            onChange={handleTypeFilterChange}
+                            options={[
+                                { value: ALL_BANNER_TYPES, label: 'Tất cả loại banner' },
+                                ...bannerTypes.map(({ value, label }) => ({ value, label })),
+                            ]}
+                        />
+                        <DatePicker
+                            value={createdAtFilter}
+                            format="DD/MM/YYYY"
+                            placeholder="Lọc theo ngày tạo"
+                            onChange={handleCreatedAtFilterChange}
+                        />
+                        <Button icon={<ReloadOutlined />} onClick={handleResetFilters}>
+                            Đặt lại
+                        </Button>
+                    </Space>
+                    <Button
+                        icon={<ReloadOutlined />}
+                        onClick={() => fetchBanners(pagination.current, pagination.pageSize)}
+                    >
+                        Tải lại
+                    </Button>
                 </div>
                 <Table
                     columns={columns}
@@ -341,7 +370,7 @@ const BannerManagement = () => {
                         const nextPage = page.current;
                         const nextSize = page.pageSize;
                         if (nextPage !== pagination.current || nextSize !== pagination.pageSize) {
-                            fetchBanners(nextPage, nextSize, searchKeyword);
+                            fetchBanners(nextPage, nextSize);
                         }
                     }}
                     scroll={{ x: 1000 }}
@@ -475,9 +504,6 @@ const BannerManagement = () => {
                             <Tag color={getBannerTypeColor(viewingBanner.type)}>
                                 {getBannerTypeLabel(viewingBanner.type)}
                             </Tag>
-                        </Descriptions.Item>
-                        <Descriptions.Item label="URL" span={2}>
-                            <Text copyable>{viewingBanner.url}</Text>
                         </Descriptions.Item>
                         {viewingBanner.type === 'IMAGE' && (
                             <Descriptions.Item label="Xem trước" span={2}>

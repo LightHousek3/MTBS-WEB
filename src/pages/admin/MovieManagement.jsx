@@ -642,10 +642,8 @@ const MovieManagement = () => {
             render: (_, record) => (
                 <Space size="small">
                     <Button
-                        type="primary"
                         icon={<EyeOutlined />}
                         onClick={() => handleViewDetail(record)}
-                        className="!bg-[#f6339a]"
                         title="Xem chi tiết"
                     />
                     <Button

@@ -154,12 +154,6 @@ const AdminLayout = () => {
             label: 'Quản lý người dùng',
             onClick: () => navigate('/admin/users'),
         },
-        {
-            key: '/admin/application-messages',
-            icon: <MessageOutlined />,
-            label: 'Application Messages',
-            onClick: () => navigate('/admin/application-messages'),
-        },
     ];
 
     const handleLogout = () => {

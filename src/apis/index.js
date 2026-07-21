@@ -115,6 +115,7 @@ const refundRequestAPI = {
     getRefundRequests: (params = {}) => apiClient.get('/refund-requests', { params }),
     getRefundRequestById: (id) => apiClient.get(`/refund-requests/${id}`),
     processRefundRequest: (id, data) => apiClient.patch(`/refund-requests/${id}/process`, data),
+    queryRefundStatus: (id) => apiClient.patch(`/refund-requests/${id}/query-status`),
 };
 
 const reviewAPI = {

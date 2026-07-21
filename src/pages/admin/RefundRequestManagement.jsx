@@ -9,7 +9,6 @@ import {
     Modal,
     Select,
     Space,
-    Switch,
     Table,
     Tag,
     Typography,
@@ -49,6 +48,8 @@ const RefundRequestManagement = () => {
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailOpen, setDetailOpen] = useState(false);
     const [processOpen, setProcessOpen] = useState(false);
+    const [queryLoading, setQueryLoading] = useState(false);
+    const [queryResult, setQueryResult] = useState(null);
     const [selectedRefund, setSelectedRefund] = useState(null);
     const [status, setStatus] = useState(ALL_STATUS_VALUE);
     const [pagination, setPagination] = useState({
@@ -92,8 +93,17 @@ const RefundRequestManagement = () => {
         try {
             setDetailOpen(true);
             setDetailLoading(true);
+            setQueryResult(null);
             const response = await refundRequestAPI.getRefundRequestById(id);
             setSelectedRefund(response.data.data);
+            if (response.data.data?.providerQueryResponse) {
+                setQueryResult({
+                    paymentMethod: response.data.data.paymentMethod,
+                    providerRefundId: response.data.data.providerRefundId,
+                    queryResponse: response.data.data.providerQueryResponse,
+                    queriedAt: response.data.data.queriedAt,
+                });
+            }
         } catch (error) {
             message.error(error.response?.data?.message || 'Không thể tải chi tiết hoàn tiền.');
             setDetailOpen(false);
@@ -107,7 +117,6 @@ const RefundRequestManagement = () => {
         form.setFieldsValue({
             status: 'APPROVED',
             response: '',
-            simulateSuccess: true,
         });
         setProcessOpen(true);
     };
@@ -115,12 +124,37 @@ const RefundRequestManagement = () => {
     const handleProcess = async () => {
         try {
             const values = await form.validateFields();
-            await refundRequestAPI.processRefundRequest(selectedRefund.id || selectedRefund._id, values);
+            const payload = {
+                status: values.status,
+                response: values.response,
+            };
+
+            if (selectedRefund?.paymentMethod === 'VNPAY') {
+                payload.simulateSuccess = true;
+            }
+
+            await refundRequestAPI.processRefundRequest(selectedRefund.id || selectedRefund._id, payload);
             message.success('Xử lý yêu cầu hoàn tiền thành công.');
             setProcessOpen(false);
             await fetchRefundRequests(pagination.current, pagination.pageSize);
         } catch (error) {
             message.error(error.response?.data?.message || 'Không thể xử lý yêu cầu hoàn tiền.');
+        }
+    };
+
+    const handleQueryRefundStatus = async () => {
+        try {
+            setQueryLoading(true);
+            const response = await refundRequestAPI.queryRefundStatus(
+                selectedRefund.id || selectedRefund._id,
+            );
+            setQueryResult(response.data.data);
+            setSelectedRefund(response.data.data.refundRequest);
+            message.success('Truy vấn trạng thái hoàn tiền thành công.');
+        } catch (error) {
+            message.error(error.response?.data?.message || 'Không thể truy vấn trạng thái hoàn tiền.');
+        } finally {
+            setQueryLoading(false);
         }
     };
 
@@ -250,6 +284,7 @@ const RefundRequestManagement = () => {
                 onCancel={() => {
                     setDetailOpen(false);
                     setSelectedRefund(null);
+                    setQueryResult(null);
                 }}
                 footer={null}
                 width={820}
@@ -261,54 +296,98 @@ const RefundRequestManagement = () => {
                     </div>
                 ) : (
                     selectedRefund && (
-                        <Descriptions bordered column={2} size="small">
-                            <Descriptions.Item label="Mã yêu cầu" span={2}>
-                                <Text copyable>{selectedRefund.id || selectedRefund._id}</Text>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Trạng thái">
-                                <Tag color={statusConfig(selectedRefund.status).color}>
-                                    {statusConfig(selectedRefund.status).label}
-                                </Tag>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Số tiền">
-                                <Text strong>{money(selectedRefund.refundAmount)}</Text>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Khách hàng">
-                                {getUserName(selectedRefund.userId)}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Email">
-                                {selectedRefund.userId?.email || '-'}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Phim">
-                                {selectedRefund.bookingId?.showtime?.movie?.title || '-'}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Suất chiếu">
-                                {selectedRefund.bookingId?.showtime?.startTime
-                                    ? formatDate(
-                                          selectedRefund.bookingId.showtime.startTime,
-                                          'HH:mm dd/MM/yyyy',
-                                      )
-                                    : '-'}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Lý do" span={2}>
-                                <Paragraph style={{ marginBottom: 0 }}>
-                                    {selectedRefund.reason}
-                                </Paragraph>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Phản hồi" span={2}>
-                                <Paragraph style={{ whiteSpace: 'pre-wrap', marginBottom: 0 }}>
-                                    {selectedRefund.response || '-'}
-                                </Paragraph>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Người xử lý">
-                                {getUserName(selectedRefund.processedBy)}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Thời gian hoàn">
-                                {selectedRefund.refundedAt
-                                    ? formatDate(selectedRefund.refundedAt, 'HH:mm dd/MM/yyyy')
-                                    : '-'}
-                            </Descriptions.Item>
-                        </Descriptions>
+                        <Space direction="vertical" size="middle" className="w-full">
+                            <Descriptions bordered column={2} size="small">
+                                <Descriptions.Item label="Mã yêu cầu" span={2}>
+                                    <Text copyable>{selectedRefund.id || selectedRefund._id}</Text>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Trạng thái">
+                                    <Tag color={statusConfig(selectedRefund.status).color}>
+                                        {statusConfig(selectedRefund.status).label}
+                                    </Tag>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Số tiền">
+                                    <Text strong>{money(selectedRefund.refundAmount)}</Text>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Khách hàng">
+                                    {getUserName(selectedRefund.userId)}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Email">
+                                    {selectedRefund.userId?.email || '-'}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Phim">
+                                    {selectedRefund.bookingId?.showtime?.movie?.title || '-'}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Suất chiếu">
+                                    {selectedRefund.bookingId?.showtime?.startTime
+                                        ? formatDate(
+                                              selectedRefund.bookingId.showtime.startTime,
+                                              'HH:mm dd/MM/yyyy',
+                                          )
+                                        : '-'}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Lý do" span={2}>
+                                    <Paragraph style={{ marginBottom: 0 }}>
+                                        {selectedRefund.reason}
+                                    </Paragraph>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Phản hồi" span={2}>
+                                    <Paragraph style={{ whiteSpace: 'pre-wrap', marginBottom: 0 }}>
+                                        {selectedRefund.response || '-'}
+                                    </Paragraph>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Mã hoàn tiền provider">
+                                    {selectedRefund.providerRefundId || '-'}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Truy vấn gần nhất">
+                                    {selectedRefund.queriedAt
+                                        ? formatDate(selectedRefund.queriedAt, 'HH:mm dd/MM/yyyy')
+                                        : '-'}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Người xử lý">
+                                    {getUserName(selectedRefund.processedBy)}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Thời gian hoàn">
+                                    {selectedRefund.refundedAt
+                                        ? formatDate(selectedRefund.refundedAt, 'HH:mm dd/MM/yyyy')
+                                        : '-'}
+                                </Descriptions.Item>
+                            </Descriptions>
+
+                            {selectedRefund.status === 'APPROVED' && (
+                                <Button
+                                    type="primary"
+                                    icon={<ReloadOutlined />}
+                                    loading={queryLoading}
+                                    onClick={handleQueryRefundStatus}
+                                >
+                                    Truy vấn hoàn tiền
+                                </Button>
+                            )}
+
+                            {queryResult && (
+                                <Card size="small" title="Kết quả truy vấn hoàn tiền">
+                                    <Descriptions bordered column={1} size="small">
+                                        <Descriptions.Item label="Cổng thanh toán">
+                                            {queryResult.paymentMethod || '-'}
+                                        </Descriptions.Item>
+                                        <Descriptions.Item label="Mã hoàn tiền">
+                                            {queryResult.providerRefundId || '-'}
+                                        </Descriptions.Item>
+                                        <Descriptions.Item label="Thời gian truy vấn">
+                                            {queryResult.queriedAt
+                                                ? formatDate(queryResult.queriedAt, 'HH:mm dd/MM/yyyy')
+                                                : '-'}
+                                        </Descriptions.Item>
+                                        <Descriptions.Item label="Response">
+                                            <pre className="whitespace-pre-wrap wrap-break-word m-0">
+                                                {JSON.stringify(queryResult.queryResponse, null, 2)}
+                                            </pre>
+                                        </Descriptions.Item>
+                                    </Descriptions>
+                                </Card>
+                            )}
+                        </Space>
                     )
                 )}
             </Modal>
@@ -326,22 +405,11 @@ const RefundRequestManagement = () => {
                     <Form.Item name="status" label="Kết quả xử lý" rules={[{ required: true }]}>
                         <Select options={PROCESS_STATUS_OPTIONS} />
                     </Form.Item>
-                    <Form.Item
-                        shouldUpdate={(prev, next) => prev.status !== next.status}
-                        noStyle
-                    >
-                        {({ getFieldValue }) =>
-                            getFieldValue('status') === 'APPROVED' && (
-                                <Form.Item
-                                    name="simulateSuccess"
-                                    label="VNPay giả lập thành công"
-                                    valuePropName="checked"
-                                >
-                                    <Switch />
-                                </Form.Item>
-                            )
-                        }
-                    </Form.Item>
+                    {selectedRefund?.paymentMethod === 'VNPAY' && (
+                        <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            VNPay sẽ được giả lập trạng thái hoàn tiền tự động khi duyệt.
+                        </Paragraph>
+                    )}
                     <Form.Item name="response" label="Ghi chú xử lý">
                         <Input.TextArea rows={4} maxLength={2000} showCount />
                     </Form.Item>

@@ -65,6 +65,10 @@ const UserManagement = () => {
     };
 
     const openStatusModal = (user) => {
+        if (user.role === 'ADMIN') {
+            message.warning('Không thể đổi trạng thái cho tài khoản admin');
+            return;
+        }
         setSelectedUser(user);
         statusForm.setFieldsValue({ status: user.status });
         setIsStatusModalOpen(true);
@@ -72,6 +76,10 @@ const UserManagement = () => {
 
     const handleStatusUpdate = async () => {
         try {
+            if (selectedUser?.role === 'ADMIN') {
+                message.warning('Không thể đổi trạng thái cho tài khoản admin');
+                return;
+            }
             const values = await statusForm.validateFields();
             await apiClient.patch(`/users/${selectedUser.id || selectedUser._id}/status`, { status: values.status });
             message.success('Cập nhật trạng thái người dùng thành công');
@@ -131,7 +139,12 @@ const UserManagement = () => {
                         <Button size="small" icon={<UserOutlined />} onClick={() => openDetail(record)}>
                             Xem
                         </Button>
-                        <Button size="small" icon={<EditOutlined />} onClick={() => openStatusModal(record)}>
+                        <Button
+                            size="small"
+                            icon={<EditOutlined />}
+                            onClick={() => openStatusModal(record)}
+                            disabled={record.role === 'ADMIN'}
+                        >
                             Đổi trạng thái
                         </Button>
                     </Space>

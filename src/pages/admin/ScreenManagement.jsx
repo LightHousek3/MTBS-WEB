@@ -28,6 +28,12 @@ import { hasFormChanged, formatDate } from '../../utils/';
 const { Title, Text } = Typography;
 const { Search } = Input;
 
+const getId = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    return value.id || value._id || '';
+};
+
 const ScreenManagement = () => {
     const [screens, setScreens] = useState([]);
     const [theaters, setTheaters] = useState([]);
@@ -106,8 +112,16 @@ const ScreenManagement = () => {
 
     const normalizeScreenForForm = (screen) => ({
         ...screen,
-        theater: screen.theater?._id || screen.theater?.id || screen.theater,
+        theater: getId(screen.theater),
     });
+
+    const getTheaterName = (theaterValue) => {
+        if (theaterValue?.name) return theaterValue.name;
+
+        const theaterId = getId(theaterValue);
+        const theater = theaters.find((item) => getId(item) === theaterId);
+        return theater?.name || '-';
+    };
 
     const handleEdit = (screen) => {
         const normalizedScreen = normalizeScreenForForm(screen);
@@ -203,10 +217,7 @@ const ScreenManagement = () => {
             dataIndex: 'theater',
             key: 'theater',
             width: 150,
-            render: (theaterId) => {
-                const theater = theaters.find(t => t.id === theaterId);
-                return <Text>{theater?.name || '-'}</Text>;
-            },
+            render: (theater) => <Text>{getTheaterName(theater)}</Text>,
         },
         {
             title: 'Thao tác',
@@ -364,8 +375,8 @@ const ScreenManagement = () => {
                                 {viewingScreen.seatCapacity}
                             </Descriptions.Item>
 
-                                    <Descriptions.Item label="Rạp chiếu">
-                                {theaters.find(t => t.id === (viewingScreen.theater?._id || viewingScreen.theater?.id || viewingScreen.theater))?.name || '-'}
+                            <Descriptions.Item label="Rạp chiếu">
+                                {getTheaterName(viewingScreen.theater)}
                             </Descriptions.Item>
 
                             <Descriptions.Item label="Ngày tạo">

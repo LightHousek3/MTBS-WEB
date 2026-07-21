@@ -21,6 +21,7 @@ const { Title, Text } = Typography;
 const { Search, TextArea } = Input;
 
 const getNewsImageUrl = (news) => news?.image || news?.imageUrl || '';
+const getApiErrorMessage = (error, fallback) => error.response?.data?.message || error.message || fallback;
 
 const NewsManagement = () => {
     const [newsItems, setNewsItems] = useState([]);
@@ -51,6 +52,8 @@ const NewsManagement = () => {
 
         return {
             ...restValues,
+            title: restValues.title?.trim(),
+            content: restValues.content?.trim(),
             image: imageUrl || formImageUrl?.trim() || '',
         };
     };
@@ -169,9 +172,11 @@ const NewsManagement = () => {
 
             await newsAPI.createNews(buildNewsPayload(values, imageUrl));
             message.success('Thêm tin tức thành công');
+            return true;
         } catch (error) {
-            message.error(error.message || 'Lỗi không thể thêm tin tức!');
+            message.error(getApiErrorMessage(error, 'Lỗi không thể thêm tin tức!'));
             console.error(error.response?.data?.message || error.message);
+            return false;
         } finally {
             setLoading(false);
         }
@@ -188,9 +193,11 @@ const NewsManagement = () => {
             }
             await newsAPI.updateNews(editingNews.id, buildNewsPayload(values, imageUrl));
             message.success('Cập nhật tin tức thành công');
+            return true;
         } catch (error) {
-            message.error(error.message || 'Lỗi không thể cập nhật tin tức!');
+            message.error(getApiErrorMessage(error, 'Lỗi không thể cập nhật tin tức!'));
             console.error(error.response?.data?.message || error.message);
+            return false;
         } finally {
             setLoading(false);
         }
@@ -203,10 +210,9 @@ const NewsManagement = () => {
                 return;
             }
 
-            if (editingNews) {
-                await handleUpdateNews(values);
-            } else {
-                await handleAddNews(values);
+            const success = editingNews ? await handleUpdateNews(values) : await handleAddNews(values);
+            if (!success) {
+                return;
             }
 
             setIsModalVisible(false);

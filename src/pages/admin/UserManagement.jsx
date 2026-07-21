@@ -140,6 +140,7 @@ const UserManagement = () => {
                             Xem
                         </Button>
                         <Button
+                        type="primary"
                             size="small"
                             icon={<EditOutlined />}
                             onClick={() => openStatusModal(record)}
